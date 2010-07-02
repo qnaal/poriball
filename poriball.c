@@ -5,11 +5,12 @@
 #include <SDL_image.h>
 
 // macros
+#define GAME_SPEED 100		// updates/s
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
 #define PLAYER_RADIUS 80
-#define PLAYER_SPEED 5
+#define PLAYER_SPEED 500	// px/s
 
 #define BALL_RADIUS 10
 
@@ -115,7 +116,7 @@ int main() {
 
     move_player(&p1);
 
-    SDL_Delay(10);
+    SDL_Delay(1000 / GAME_SPEED);
   };
   return 0;
 }
@@ -150,7 +151,7 @@ void move_player(Player *p) {
   int dir= 0;
   if (p->kr) dir++;
   if (p->kl) dir--;
-  p->x = p->x + dir * PLAYER_SPEED;
+  p->x = p->x + dir * PLAYER_SPEED / GAME_SPEED;
 }
 
 void draw_player(GameData *game, Player *p, SDL_Surface *img) {
