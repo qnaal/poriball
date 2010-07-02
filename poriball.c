@@ -71,6 +71,8 @@ float pythag(Pt pt);
 float azimuth(Pt pt);
 PtPol polarize(Pt pt);
 Pt carterize(PtPol pol);
+PtPol collision(Ball *b, Player *p);
+void handle_collisions(Ball *b, Player *p);
 
 // functions
 int main() {
@@ -131,6 +133,7 @@ int main() {
     } // while (events)
 
     move_player(&p1);
+    handle_collisions(&b, &p1);
     move_ball(&b);
 
     SDL_Delay(1000 / GAME_SPEED);
@@ -228,4 +231,23 @@ Pt carterize(PtPol pol) {
   float x = pol.r * sin(pol.theta);
   float y = pol.r * cos(pol.theta);
   return (Pt){x,y};
+}
+
+PtPol collision(Ball *b, Player *p) {
+  float mindist = b->r + p->r;
+  Pt dif = vsum(b->pos, vmlt(-1, p->pos));
+  PtPol dif_pol = polarize( dif );
+  if (dif_pol.r < mindist) {
+    float dist =  dif_pol.theta;
+    PtPol contact_pol = { dist - mindist, dif_pol.theta };
+    return contact_pol;
+  }
+  return (PtPol){0.0, 0.0};
+}
+
+void handle_collisions(Ball *b, Player *p) {
+  PtPol contact = collision(b, p);
+  if (contact.r != 0.0) {
+    b->vel.y = -b->vel.y;
+  }
 }
