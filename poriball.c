@@ -2,29 +2,30 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <SDL.h>
+#include <SDL_image.h>
 
 // macros
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
-#define PLAYER_WIDTH 20
-#define PLAYER_HEIGHT 20
+#define PLAYER_RADIUS 80
 #define PLAYER_SPEED 5
 
 #define KEY_QUIT SDLK_q
 #define KEY_P1_L SDLK_s
 #define KEY_P1_R SDLK_f
 
+#define PORIMG "slime.png"
+
 // structures
 typedef struct {
   // pos/size
   int x;
   int y;
-  int w;
-  int h;
+  int r;
   // keys
-  bool l;
-  bool r;
+  bool kl;
+  bool kr;
 } Player;
 
 typedef struct {
@@ -38,7 +39,7 @@ typedef struct {
 bool init_video();
 Player make_player(int x, int y);
 void move_player(Player *p);
-void draw_player(GameData *game, Player *p);
+void draw_player(GameData *game, Player *p, SDL_Surface *img);
 
 // functions
 int main() {
@@ -46,15 +47,17 @@ int main() {
   Player p1 = make_player(100, 0);
   GameData game;
 
+  SDL_Surface *porimg = IMG_Load(PORIMG); //200x100px, with the point 100,90 being the base point
+
   init_video(&game);
   game.colfg = SDL_MapRGB(game.screen->format, 0xff, 0xff, 0xff);
-  game.colbg = SDL_MapRGB(game.screen->format, 0x00, 0x00, 0x00);
+  game.colbg = SDL_MapRGB(game.screen->format, 0xd0, 0xd0, 0xd0);
   SDL_Event event;
 
   while(running) {
 
     SDL_FillRect(game.screen, NULL, game.colbg);
-    draw_player(&game, &p1);
+    draw_player(&game, &p1, porimg);
     SDL_Flip(game.screen);
 
     // handle events
@@ -63,10 +66,10 @@ int main() {
       case SDL_KEYDOWN:
 	switch(event.key.keysym.sym){
 	case KEY_P1_L:
-	  p1.l = true;
+	  p1.kl = true;
 	  break;
 	case KEY_P1_R:
-	  p1.r = true;
+	  p1.kr = true;
 	  break;
 	case KEY_QUIT:
 	  running = false;
@@ -78,10 +81,10 @@ int main() {
       case SDL_KEYUP:
 	switch(event.key.keysym.sym){
 	case KEY_P1_L:
-	  p1.l = false;
+	  p1.kl = false;
 	  break;
 	case KEY_P1_R:
-	  p1.r = false;
+	  p1.kr = false;
 	  break;
 	default:
 	  break;
@@ -121,21 +124,20 @@ Player make_player(int x, int y) {
   Player p;
   p.x = x;
   p.y = y;
-  p.w = PLAYER_WIDTH;
-  p.h = PLAYER_HEIGHT;
-  p.l = false;
-  p.r = false;
+  p.r = PLAYER_RADIUS;
+  p.kl = false;
+  p.kr = false;
   return p;
 }
 
 void move_player(Player *p) {
   int dir= 0;
-  if (p->r) dir++;
-  if (p->l) dir--;
+  if (p->kr) dir++;
+  if (p->kl) dir--;
   p->x = p->x + dir * PLAYER_SPEED;
 }
 
-void draw_player(GameData *game, Player *p) {
-  SDL_Rect rect = { p->x, SCREEN_HEIGHT - p->y - p->h, p->w, p->h };
-  SDL_FillRect( game->screen, &rect, game->colfg );
+void draw_player(GameData *game, Player *p, SDL_Surface *img) {
+  SDL_Rect dest = { p->x - 100, SCREEN_HEIGHT - (p->y + 90), 0, 0 };
+  SDL_BlitSurface( img, NULL, game->screen, &dest );
 }
