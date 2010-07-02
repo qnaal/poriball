@@ -11,6 +11,8 @@
 #define PLAYER_RADIUS 80
 #define PLAYER_SPEED 5
 
+#define BALL_RADIUS 10
+
 #define KEY_QUIT SDLK_q
 #define KEY_P1_L SDLK_s
 #define KEY_P1_R SDLK_f
@@ -29,6 +31,16 @@ typedef struct {
 } Player;
 
 typedef struct {
+  //pos/size
+  int x;
+  int y;
+  int r;
+  //vel
+  int vx;			// px/s
+  int vy;
+} Ball;
+
+typedef struct {
   SDL_Surface *screen;
   Uint32 colfg;
   Uint32 colbg;
@@ -40,17 +52,20 @@ bool init_video();
 Player make_player(int x, int y);
 void move_player(Player *p);
 void draw_player(GameData *game, Player *p, SDL_Surface *img);
+Ball spawn_ball(int x, int y);
+void draw_ball(GameData *game, Ball *b);
 
 // functions
 int main() {
   int running = true;
   Player p1 = make_player(100, 0);
+  Ball b = spawn_ball(100, 200);
   GameData game;
 
   SDL_Surface *porimg = IMG_Load(PORIMG); //200x100px, with the point 100,90 being the base point
 
   init_video(&game);
-  game.colfg = SDL_MapRGB(game.screen->format, 0xff, 0xff, 0xff);
+  game.colfg = SDL_MapRGB(game.screen->format, 0x80, 0x80, 0x80);
   game.colbg = SDL_MapRGB(game.screen->format, 0xd0, 0xd0, 0xd0);
   SDL_Event event;
 
@@ -58,6 +73,7 @@ int main() {
 
     SDL_FillRect(game.screen, NULL, game.colbg);
     draw_player(&game, &p1, porimg);
+    draw_ball(&game, &b);
     SDL_Flip(game.screen);
 
     // handle events
@@ -140,4 +156,20 @@ void move_player(Player *p) {
 void draw_player(GameData *game, Player *p, SDL_Surface *img) {
   SDL_Rect dest = { p->x - 100, SCREEN_HEIGHT - (p->y + 90), 0, 0 };
   SDL_BlitSurface( img, NULL, game->screen, &dest );
+}
+
+Ball spawn_ball(int x, int y) {
+  Ball b;
+  b.x = x;
+  b.y = y;
+  b.r = BALL_RADIUS;
+  b.vx = 0;
+  b.vy = 0;
+  return b;
+}
+
+void draw_ball(GameData *game, Ball *b) {
+  int sq = b->r * 1.8;
+  SDL_Rect rect = { b->x - b->r, SCREEN_HEIGHT - (b->y + b->r), sq, sq };
+  SDL_FillRect( game->screen, &rect, game->colfg );
 }
