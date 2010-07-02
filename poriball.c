@@ -13,6 +13,7 @@
 #define PLAYER_SPEED 500	// px/s
 
 #define BALL_RADIUS 10
+#define BALL_ACC 1000
 
 #define KEY_QUIT SDLK_q
 #define KEY_P1_L SDLK_s
@@ -23,8 +24,8 @@
 // structures
 typedef struct {
   // pos/size
-  int x;
-  int y;
+  float x;
+  float y;
   int r;
   // keys
   bool kl;
@@ -33,12 +34,12 @@ typedef struct {
 
 typedef struct {
   //pos/size
-  int x;
-  int y;
+  float x;
+  float y;
   int r;
   //vel
-  int vx;			// px/s
-  int vy;
+  float vx;			// px/s
+  float vy;
 } Ball;
 
 typedef struct {
@@ -50,17 +51,18 @@ typedef struct {
 
 // prototypes
 bool init_video();
-Player make_player(int x, int y);
+Player make_player(float x, float y);
 void move_player(Player *p);
 void draw_player(GameData *game, Player *p, SDL_Surface *img);
-Ball spawn_ball(int x, int y);
+Ball spawn_ball(float x, float y);
+void move_ball(Ball *b);
 void draw_ball(GameData *game, Ball *b);
 
 // functions
 int main() {
   int running = true;
-  Player p1 = make_player(100, 0);
-  Ball b = spawn_ball(100, 200);
+  Player p1 = make_player(100.0, 0.0);
+  Ball b = spawn_ball(100.0, 200.0);
   GameData game;
 
   SDL_Surface *porimg = IMG_Load(PORIMG); //200x100px, with the point 100,90 being the base point
@@ -115,6 +117,7 @@ int main() {
     } // while (events)
 
     move_player(&p1);
+    move_ball(&b);
 
     SDL_Delay(1000 / GAME_SPEED);
   };
@@ -137,7 +140,7 @@ bool init_video(GameData *game) {
   return true;
 }
 
-Player make_player(int x, int y) {
+Player make_player(float x, float y) {
   Player p;
   p.x = x;
   p.y = y;
@@ -159,14 +162,20 @@ void draw_player(GameData *game, Player *p, SDL_Surface *img) {
   SDL_BlitSurface( img, NULL, game->screen, &dest );
 }
 
-Ball spawn_ball(int x, int y) {
+Ball spawn_ball(float x, float y) {
   Ball b;
   b.x = x;
   b.y = y;
   b.r = BALL_RADIUS;
-  b.vx = 0;
-  b.vy = 0;
+  b.vx = 0.0;
+  b.vy = 0.0;
   return b;
+}
+
+void move_ball(Ball *b) {
+  b->x = b->x + b->vx / GAME_SPEED;
+  b->y = b->y + b->vy / GAME_SPEED;
+  b->vy = b->vy - BALL_ACC / GAME_SPEED;
 }
 
 void draw_ball(GameData *game, Ball *b) {
