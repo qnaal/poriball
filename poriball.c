@@ -9,6 +9,7 @@
 
 #define PLAYER_WIDTH 20
 #define PLAYER_HEIGHT 20
+#define PLAYER_SPEED 5
 
 #define KEY_QUIT SDLK_q
 #define KEY_P1_L SDLK_s
@@ -29,6 +30,7 @@ typedef struct {
 typedef struct {
   SDL_Surface *screen;
   Uint32 colfg;
+  Uint32 colbg;
 } GameData;
 
 
@@ -46,10 +48,12 @@ int main() {
 
   init_video(&game);
   game.colfg = SDL_MapRGB(game.screen->format, 0xff, 0xff, 0xff);
+  game.colbg = SDL_MapRGB(game.screen->format, 0x00, 0x00, 0x00);
   SDL_Event event;
 
   while(running) {
 
+    SDL_FillRect(game.screen, NULL, game.colbg);
     draw_player(&game, &p1);
     SDL_Flip(game.screen);
 
@@ -92,7 +96,7 @@ int main() {
 
     move_player(&p1);
 
-    SDL_Delay(30);
+    SDL_Delay(10);
   };
   return 0;
 }
@@ -128,6 +132,7 @@ void move_player(Player *p) {
   int dir= 0;
   if (p->r) dir++;
   if (p->l) dir--;
+  p->x = p->x + dir * PLAYER_SPEED;
 }
 
 void draw_player(GameData *game, Player *p) {
