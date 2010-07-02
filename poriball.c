@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>		// for atan2()
 #include <SDL.h>
 #include <SDL_image.h>
 
 // macros
-#define GAME_SPEED 100		// updates/s
+#define GAME_SPEED 100.0	// updates/s
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
@@ -23,9 +24,18 @@
 
 // structures
 typedef struct {
-  // pos/size
   float x;
   float y;
+} Pt;
+
+typedef struct {
+  float r;
+  float theta;
+} PtPol;
+
+typedef struct {
+  // pos/size
+  Pt pos;			// px
   int r;
   // keys
   bool kl;
@@ -34,12 +44,10 @@ typedef struct {
 
 typedef struct {
   //pos/size
-  float x;
-  float y;
+  Pt pos;			// px
   int r;
   //vel
-  float vx;			// px/s
-  float vy;
+  Pt vel;			// px/s
 } Ball;
 
 typedef struct {
@@ -57,6 +65,12 @@ void draw_player(GameData *game, Player *p, SDL_Surface *img);
 Ball spawn_ball(float x, float y);
 void move_ball(Ball *b);
 void draw_ball(GameData *game, Ball *b);
+Pt vsum(Pt pt1, Pt pt2);
+Pt vmlt(float s, Pt pt);
+float pythag(Pt pt);
+float azimuth(Pt pt);
+PtPol polarize(Pt pt);
+Pt carterize(PtPol pol);
 
 // functions
 int main() {
@@ -142,8 +156,7 @@ bool init_video(GameData *game) {
 
 Player make_player(float x, float y) {
   Player p;
-  p.x = x;
-  p.y = y;
+  p.pos = (Pt){x,y};
   p.r = PLAYER_RADIUS;
   p.kl = false;
   p.kr = false;
@@ -154,32 +167,65 @@ void move_player(Player *p) {
   int dir= 0;
   if (p->kr) dir++;
   if (p->kl) dir--;
-  p->x = p->x + dir * PLAYER_SPEED / GAME_SPEED;
+  p->pos.x = p->pos.x + dir * PLAYER_SPEED / GAME_SPEED;
 }
 
 void draw_player(GameData *game, Player *p, SDL_Surface *img) {
-  SDL_Rect dest = { p->x - 100, SCREEN_HEIGHT - (p->y + 90), 0, 0 };
+  SDL_Rect dest = { p->pos.x - 100, SCREEN_HEIGHT - (p->pos.y + 90), 0, 0 };
   SDL_BlitSurface( img, NULL, game->screen, &dest );
 }
 
 Ball spawn_ball(float x, float y) {
   Ball b;
-  b.x = x;
-  b.y = y;
+  b.pos = (Pt){x,y};
   b.r = BALL_RADIUS;
-  b.vx = 0.0;
-  b.vy = 0.0;
+  b.vel = (Pt){ 0.0, 0.0 };
   return b;
 }
 
 void move_ball(Ball *b) {
-  b->x = b->x + b->vx / GAME_SPEED;
-  b->y = b->y + b->vy / GAME_SPEED;
-  b->vy = b->vy - BALL_ACC / GAME_SPEED;
+  b->pos = vsum( b->pos, vmlt( 1 / GAME_SPEED, b->vel));
+  b->vel = vsum( b->vel,
+		 vmlt( 1.0 / GAME_SPEED, (Pt){ 0.0, -BALL_ACC }));
 }
 
 void draw_ball(GameData *game, Ball *b) {
   int sq = b->r * 1.8;
-  SDL_Rect rect = { b->x - b->r, SCREEN_HEIGHT - (b->y + b->r), sq, sq };
+  SDL_Rect rect = { b->pos.x - b->r, SCREEN_HEIGHT - (b->pos.y + b->r), sq, sq };
   SDL_FillRect( game->screen, &rect, game->colfg );
+}
+
+Pt vsum(Pt pt1, Pt pt2) {
+  Pt sum = { pt1.x + pt2.x, pt1.y + pt2.y };
+  return sum;
+}
+
+// scalar multiplication
+Pt vmlt(float s, Pt pt) {
+  float x = s * pt.x;
+  float y = s * pt.y;
+  Pt product = {x,y};
+  return product;
+}
+
+float pythag(Pt pt) {
+  return sqrt( pow(pt.x, 2) + pow(pt.y, 2));
+}
+
+float azimuth(Pt pt) {
+  double theta = atan2( pt.y, pt.x );
+  return (float)theta;
+}
+
+PtPol polarize(Pt pt) {
+  float r = pythag(pt);
+  float theta = azimuth(pt);
+  PtPol pol = {r, theta};
+  return pol;
+}
+
+Pt carterize(PtPol pol) {
+  float x = pol.r * sin(pol.theta);
+  float y = pol.r * cos(pol.theta);
+  return (Pt){x,y};
 }
