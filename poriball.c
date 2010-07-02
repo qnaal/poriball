@@ -10,12 +10,20 @@
 #define PLAYER_WIDTH 20
 #define PLAYER_HEIGHT 20
 
+#define KEY_QUIT SDLK_q
+#define KEY_P1_L SDLK_s
+#define KEY_P1_R SDLK_f
+
 // structures
 typedef struct {
+  // pos/size
   int x;
   int y;
   int w;
   int h;
+  // keys
+  bool l;
+  bool r;
 } Player;
 
 typedef struct {
@@ -27,7 +35,8 @@ typedef struct {
 // prototypes
 bool init_video();
 Player make_player(int x, int y);
-void draw_player(GameData *game, Player p);
+void move_player(Player *p);
+void draw_player(GameData *game, Player *p);
 
 // functions
 int main() {
@@ -39,20 +48,50 @@ int main() {
   game.colfg = SDL_MapRGB(game.screen->format, 0xff, 0xff, 0xff);
   SDL_Event event;
 
-  while (running) {
+  while(running) {
 
-    draw_player(&game, p1);
+    draw_player(&game, &p1);
     SDL_Flip(game.screen);
 
-    while (SDL_PollEvent(&event)) {
-      if (event.type == SDL_QUIT ||
-          (event.type == SDL_KEYDOWN &&
-           event.key.keysym.sym == SDLK_q)||
-          (event.type == SDL_KEYDOWN &&
-           event.key.keysym.sym == SDLK_ESCAPE)
-          )
+    // handle events
+    while(SDL_PollEvent(&event)) {
+      switch(event.type){
+      case SDL_KEYDOWN:
+	switch(event.key.keysym.sym){
+	case KEY_P1_L:
+	  p1.l = true;
+	  break;
+	case KEY_P1_R:
+	  p1.r = true;
+	  break;
+	case KEY_QUIT:
+	  running = false;
+	  break;
+	default:
+	  break;
+	}
+	break;
+      case SDL_KEYUP:
+	switch(event.key.keysym.sym){
+	case KEY_P1_L:
+	  p1.l = false;
+	  break;
+	case KEY_P1_R:
+	  p1.r = false;
+	  break;
+	default:
+	  break;
+	}
+	break;
+      case SDL_QUIT:
 	running = false;
-    }
+	break;
+      }
+
+    } // while (events)
+
+    move_player(&p1);
+
     SDL_Delay(30);
   };
   return 0;
@@ -80,10 +119,18 @@ Player make_player(int x, int y) {
   p.y = y;
   p.w = PLAYER_WIDTH;
   p.h = PLAYER_HEIGHT;
+  p.l = false;
+  p.r = false;
   return p;
 }
 
-void draw_player(GameData *game, Player p) {
-  SDL_Rect rect = { p.x, SCREEN_HEIGHT - p.y - p.h, p.w, p.h };
+void move_player(Player *p) {
+  int dir= 0;
+  if (p->r) dir++;
+  if (p->l) dir--;
+}
+
+void draw_player(GameData *game, Player *p) {
+  SDL_Rect rect = { p->x, SCREEN_HEIGHT - p->y - p->h, p->w, p->h };
   SDL_FillRect( game->screen, &rect, game->colfg );
 }
