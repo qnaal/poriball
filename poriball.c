@@ -51,6 +51,11 @@ typedef struct {
 } Ball;
 
 typedef struct {
+  Player p1;
+  Ball b;
+} World;
+
+typedef struct {
   SDL_Surface *screen;
   Uint32 colfg;
   Uint32 colbg;
@@ -72,13 +77,14 @@ float azimuth(Pt pt);
 PtPol polarize(Pt pt);
 Pt carterize(PtPol pol);
 PtPol collision(Ball *b, Player *p);
-void handle_collisions(Ball *b, Player *p);
+void handle_collisions(World *w);
 
 // functions
 int main() {
   int running = true;
-  Player p1 = make_player(100.0, 0.0);
-  Ball b = spawn_ball(100.0, 200.0);
+  World world;
+  world.p1 = make_player(100.0, 0.0);
+  world.b = spawn_ball(100.0, 200.0);
   GameData game;
 
   SDL_Surface *porimg = IMG_Load(PORIMG); //200x100px, with the point 100,90 being the base point
@@ -91,8 +97,8 @@ int main() {
   while(running) {
 
     SDL_FillRect(game.screen, NULL, game.colbg);
-    draw_player(&game, &p1, porimg);
-    draw_ball(&game, &b);
+    draw_player(&game, &world.p1, porimg);
+    draw_ball(&game, &world.b);
     SDL_Flip(game.screen);
 
     // handle events
@@ -101,10 +107,10 @@ int main() {
       case SDL_KEYDOWN:
 	switch(event.key.keysym.sym){
 	case KEY_P1_L:
-	  p1.kl = true;
+	  world.p1.kl = true;
 	  break;
 	case KEY_P1_R:
-	  p1.kr = true;
+	  world.p1.kr = true;
 	  break;
 	case KEY_QUIT:
 	  running = false;
@@ -116,10 +122,10 @@ int main() {
       case SDL_KEYUP:
 	switch(event.key.keysym.sym){
 	case KEY_P1_L:
-	  p1.kl = false;
+	  world.p1.kl = false;
 	  break;
 	case KEY_P1_R:
-	  p1.kr = false;
+	  world.p1.kr = false;
 	  break;
 	default:
 	  break;
@@ -132,9 +138,9 @@ int main() {
 
     } // while (events)
 
-    move_player(&p1);
-    handle_collisions(&b, &p1);
-    move_ball(&b);
+    move_player(&world.p1);
+    handle_collisions(&world);
+    move_ball(&world.b);
 
     SDL_Delay(1000 / GAME_SPEED);
   };
@@ -245,9 +251,9 @@ PtPol collision(Ball *b, Player *p) {
   return (PtPol){0.0, 0.0};
 }
 
-void handle_collisions(Ball *b, Player *p) {
-  PtPol contact = collision(b, p);
+void handle_collisions(World *w) {
+  PtPol contact = collision(&w->b, &w->p1);
   if (contact.r != 0.0) {
-    b->vel.y = -b->vel.y;
+    w->b.vel.y = -w->b.vel.y;
   }
 }
