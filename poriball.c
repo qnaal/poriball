@@ -234,8 +234,8 @@ PtPol polarize(Pt pt) {
 }
 
 Pt carterize(PtPol pol) {
-  float x = pol.r * sin(pol.theta);
-  float y = pol.r * cos(pol.theta);
+  float x = pol.r * cos(pol.theta);
+  float y = pol.r * sin(pol.theta);
   return (Pt){x,y};
 }
 
