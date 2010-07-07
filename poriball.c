@@ -6,6 +6,7 @@
 #include <SDL_image.h>
 
 // macros
+#define PI M_PI
 #define GAME_SPEED 100.0	// updates/s
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
@@ -29,14 +30,22 @@ typedef struct {
 } Pt;
 
 typedef struct {
-  float r;
+  float r;		   // should be positive when given the choice
   float theta;
 } PtPol;
+
+typedef struct {
+  float depth;	   // must be positive
+  float normal;	   // the direction the ball intersects into other obj
+  Pt bvel;	   // ball velocity
+  Pt ovel;	   // other obj velocity
+} Contact;
 
 typedef struct {
   // pos/size
   Pt pos;			// px
   int r;
+  Pt vel;			// px/s
   // keys
   bool kl;
   bool kr;
@@ -63,6 +72,7 @@ typedef struct {
 
 
 // prototypes
+Contact make_contact();
 bool init_video();
 Player make_player(float x, float y);
 void move_player(Player *p);
@@ -70,13 +80,17 @@ void draw_player(GameData *game, Player *p, SDL_Surface *img);
 Ball spawn_ball(float x, float y);
 void move_ball(Ball *b);
 void draw_ball(GameData *game, Ball *b);
+float clamp(float x, float min, float max);
 Pt vsum(Pt pt1, Pt pt2);
 Pt vmlt(float s, Pt pt);
+Pt vinv(Pt pt);
+float vdot(Pt pt1, Pt pt2);
 float pythag(Pt pt);
 float azimuth(Pt pt);
 PtPol polarize(Pt pt);
 Pt carterize(PtPol pol);
-PtPol collision(Ball *b, Player *p);
+Contact collision_wall(Ball *b);
+Contact collision_player(Ball *b, Player *p);
 void handle_collisions(World *w);
 
 // functions
@@ -147,6 +161,15 @@ int main() {
   return 0;
 }
 
+Contact make_contact() {
+  Contact c;
+  c.depth = 0.0;
+  c.normal = 0.0;
+  c.bvel = (Pt){0.0,0.0};
+  c.ovel = (Pt){0.0,0.0};
+  return c;
+}
+
 bool init_video(GameData *game) {
 
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -167,6 +190,7 @@ Player make_player(float x, float y) {
   Player p;
   p.pos = (Pt){x,y};
   p.r = PLAYER_RADIUS;
+  p.vel = (Pt){0.0,0.0};
   p.kl = false;
   p.kr = false;
   return p;
@@ -176,7 +200,8 @@ void move_player(Player *p) {
   int dir= 0;
   if (p->kr) dir++;
   if (p->kl) dir--;
-  p->pos.x = p->pos.x + dir * PLAYER_SPEED / GAME_SPEED;
+  p->vel.x = dir * PLAYER_SPEED;
+  p->pos.x = p->pos.x + p->vel.x / GAME_SPEED;
 }
 
 void draw_player(GameData *game, Player *p, SDL_Surface *img) {
@@ -204,6 +229,14 @@ void draw_ball(GameData *game, Ball *b) {
   SDL_FillRect( game->screen, &rect, game->colfg );
 }
 
+float clamp(float x, float min, float max) {
+  if ( x < min )
+    x = min;
+  else if ( x > max )
+    x = max;
+  return x;
+}
+
 Pt vsum(Pt pt1, Pt pt2) {
   Pt sum = { pt1.x + pt2.x, pt1.y + pt2.y };
   return sum;
@@ -215,6 +248,15 @@ Pt vmlt(float s, Pt pt) {
   float y = s * pt.y;
   Pt product = {x,y};
   return product;
+}
+
+Pt vinv(Pt pt) {
+  return (Pt){-pt.x,-pt.y};
+}
+
+// dot product
+float vdot(Pt pt1, Pt pt2) {
+  return pt1.x * pt2.x + pt1.y * pt2.y;
 }
 
 float pythag(Pt pt) {
@@ -239,21 +281,51 @@ Pt carterize(PtPol pol) {
   return (Pt){x,y};
 }
 
-PtPol collision(Ball *b, Player *p) {
+Contact collision_player(Ball *b, Player *p) {
   float mindist = b->r + p->r;
-  Pt dif = vsum(b->pos, vmlt(-1, p->pos));
+  Pt dif = vsum(p->pos, vmlt(-1, b->pos));
   PtPol dif_pol = polarize( dif );
+  Contact contact = make_contact();
   if (dif_pol.r < mindist) {
-    float dist =  dif_pol.theta;
-    PtPol contact_pol = { dist - mindist, dif_pol.theta };
-    return contact_pol;
+    float dist =  dif_pol.r;
+    contact.depth = mindist - dist;
+    contact.normal = dif_pol.theta;
+    /* contact.normal = PI + dif_pol.theta; // XXX: this should break everything but it doesn't... */
+    contact.bvel = b->vel;
+    contact.ovel = p->vel;
   }
-  return (PtPol){0.0, 0.0};
+  return contact;
+}
+
+Contact collision_wall(Ball *b) {
+  float x = b->pos.x;
+  float r = b->r;
+  float w1 = 0;
+  float w2 = SCREEN_WIDTH;
+  Contact contact = make_contact();
+  contact.bvel = b->vel;
+  if ( x - r < w1 ) {
+    contact.depth = r - x;
+    contact.normal = PI;
+  }
+  else if ( x + r > w2 ) {
+    contact.depth = x + r - w2;
+    contact.normal = 0.0;
+  }
+  return contact;
 }
 
 void handle_collisions(World *w) {
-  PtPol contact = collision(&w->b, &w->p1);
-  if (contact.r != 0.0) {
-    w->b.vel.y = -w->b.vel.y;
+  Ball *b = &w->b;
+  Player *p = &w->p1;
+  Contact contact = collision_wall(b);
+  if ( contact.depth == 0.0 )
+    contact = collision_player(b, p);
+  if (contact.depth != 0.0) {
+    float dvelr = -2 * vdot( vsum( contact.bvel, vinv(contact.ovel) ),
+			     carterize( (PtPol){1.0, contact.normal} )
+			     );
+    Pt dvel = carterize( (PtPol){dvelr, contact.normal} );
+    b->vel = vsum( b->vel, dvel );
   }
 }
