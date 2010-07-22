@@ -290,7 +290,6 @@ Contact collision_player(Ball *b, Player *p) {
     float dist =  dif_pol.r;
     contact.depth = mindist - dist;
     contact.normal = dif_pol.theta;
-    /* contact.normal = PI + dif_pol.theta; // XXX: this should break everything but it doesn't... */
     contact.bvel = b->vel;
     contact.ovel = p->vel;
   }
@@ -319,12 +318,14 @@ void handle_collisions(World *w) {
   Ball *b = &w->b;
   Player *p = &w->p1;
   Contact contact = collision_wall(b);
+  // FIXME: kind of messy
   if ( contact.depth == 0.0 )
     contact = collision_player(b, p);
   if (contact.depth != 0.0) {
-    float dvelr = -2 * vdot( vsum( contact.bvel, vinv(contact.ovel) ),
-			     carterize( (PtPol){1.0, contact.normal} )
-			     );
+    float dvelr = -2 * abs( vdot( vsum( contact.bvel, vinv(contact.ovel) ),
+				  carterize( (PtPol){1.0, contact.normal} )
+				  )
+			    );
     Pt dvel = carterize( (PtPol){dvelr, contact.normal} );
     b->vel = vsum( b->vel, dvel );
   }
