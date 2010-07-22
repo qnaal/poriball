@@ -60,12 +60,14 @@ typedef struct {
 } Ball;
 
 typedef struct {
+  bool running;
   Player p1;
   Ball b;
 } World;
 
 typedef struct {
   SDL_Surface *screen;
+  SDL_Surface *porimg;
   Uint32 colfg;
   Uint32 colbg;
 } GameData;
@@ -81,6 +83,8 @@ Ball spawn_ball(float x, float y);
 void move_ball(Ball *b);
 void draw_ball(GameData *game, Ball *b);
 float clamp(float x, float min, float max);
+void draw_world(World *world, GameData *game);
+void handle_events(World *world);
 Pt vsum(Pt pt1, Pt pt2);
 Pt vmlt(float s, Pt pt);
 Pt vinv(Pt pt);
@@ -92,71 +96,30 @@ Pt carterize(PtPol pol);
 Contact collision_wall(Ball *b);
 Contact collision_player(Ball *b, Player *p);
 void handle_collisions(World *w);
+void physics(World *world);
 
 // functions
 int main() {
-  int running = true;
   World world;
   world.p1 = make_player(100.0, 0.0);
   world.b = spawn_ball(100.0, 200.0);
   GameData game;
 
-  SDL_Surface *porimg = IMG_Load(PORIMG); //200x100px, with the point 100,90 being the base point
-
   init_video(&game);
   game.colfg = SDL_MapRGB(game.screen->format, 0x80, 0x80, 0x80);
   game.colbg = SDL_MapRGB(game.screen->format, 0xd0, 0xd0, 0xd0);
-  SDL_Event event;
+  game.porimg = IMG_Load(PORIMG); //200x100px, with the point 100,90 being the base point
 
-  while(running) {
+  while(world.running) {
 
-    SDL_FillRect(game.screen, NULL, game.colbg);
-    draw_player(&game, &world.p1, porimg);
-    draw_ball(&game, &world.b);
-    SDL_Flip(game.screen);
+    handle_events(&world);
 
-    // handle events
-    while(SDL_PollEvent(&event)) {
-      switch(event.type){
-      case SDL_KEYDOWN:
-	switch(event.key.keysym.sym){
-	case KEY_P1_L:
-	  world.p1.kl = true;
-	  break;
-	case KEY_P1_R:
-	  world.p1.kr = true;
-	  break;
-	case KEY_QUIT:
-	  running = false;
-	  break;
-	default:
-	  break;
-	}
-	break;
-      case SDL_KEYUP:
-	switch(event.key.keysym.sym){
-	case KEY_P1_L:
-	  world.p1.kl = false;
-	  break;
-	case KEY_P1_R:
-	  world.p1.kr = false;
-	  break;
-	default:
-	  break;
-	}
-	break;
-      case SDL_QUIT:
-	running = false;
-	break;
-      }
+    physics(&world);
 
-    } // while (events)
-
-    move_player(&world.p1);
-    handle_collisions(&world);
-    move_ball(&world.b);
+    draw_world(&world, &game);
 
     SDL_Delay(1000 / GAME_SPEED);
+
   };
   return 0;
 }
@@ -235,6 +198,51 @@ float clamp(float x, float min, float max) {
   else if ( x > max )
     x = max;
   return x;
+}
+
+void draw_world(World *world, GameData *game) {
+  SDL_FillRect(game->screen, NULL, game->colbg);
+  draw_player(game, &world->p1, game->porimg);
+  draw_ball(game, &world->b);
+  SDL_Flip(game->screen);
+}
+
+void handle_events(World *world) {
+  SDL_Event event;
+  while(SDL_PollEvent(&event)) {
+    switch(event.type) {
+    case SDL_KEYDOWN:
+      switch(event.key.keysym.sym){
+      case KEY_P1_L:
+	world->p1.kl = true;
+	break;
+      case KEY_P1_R:
+	world->p1.kr = true;
+	break;
+      case KEY_QUIT:
+	world->running = false;
+	break;
+      default:
+	break;
+      }
+      break;
+    case SDL_KEYUP:
+      switch(event.key.keysym.sym){
+      case KEY_P1_L:
+	world->p1.kl = false;
+	break;
+      case KEY_P1_R:
+	world->p1.kr = false;
+	break;
+      default:
+	break;
+      }
+      break;
+    case SDL_QUIT:
+      world->running = false;
+      break;
+    }
+  }
 }
 
 Pt vsum(Pt pt1, Pt pt2) {
@@ -329,4 +337,10 @@ void handle_collisions(World *w) {
     Pt dvel = carterize( (PtPol){dvelr, contact.normal} );
     b->vel = vsum( b->vel, dvel );
   }
+}
+
+void physics(World *world) {
+  move_player(&world->p1);
+  handle_collisions(world);
+  move_ball(&world->b);
 }
