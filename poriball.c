@@ -47,8 +47,8 @@ typedef struct {
   int r;
   Pt vel;			// px/s
   // keys
-  bool kl;
-  bool kr;
+  bool pressl;
+  bool pressr;
 } Player;
 
 typedef struct {
@@ -169,15 +169,15 @@ Player make_player(float x, float y) {
   p.pos = (Pt){x,y};
   p.r = PLAYER_RADIUS;
   p.vel = (Pt){0.0,0.0};
-  p.kl = false;
-  p.kr = false;
+  p.pressl = false;
+  p.pressr = false;
   return p;
 }
 
 void move_player(Player *p, float dt) {
   int dir= 0;
-  if (p->kr) dir++;
-  if (p->kl) dir--;
+  if (p->pressr) dir++;
+  if (p->pressl) dir--;
   p->vel.x = dir * PLAYER_SPEED;
   p->pos.x = p->pos.x + p->vel.x * dt;
 }
@@ -229,10 +229,10 @@ void handle_events(World *world) {
     case SDL_KEYDOWN:
       switch(event.key.keysym.sym){
       case KEY_P1_L:
-	world->p1.kl = true;
+	world->p1.pressl = true;
 	break;
       case KEY_P1_R:
-	world->p1.kr = true;
+	world->p1.pressr = true;
 	break;
       case KEY_QUIT:
 	world->running = false;
@@ -244,10 +244,10 @@ void handle_events(World *world) {
     case SDL_KEYUP:
       switch(event.key.keysym.sym){
       case KEY_P1_L:
-	world->p1.kl = false;
+	world->p1.pressl = false;
 	break;
       case KEY_P1_R:
-	world->p1.kr = false;
+	world->p1.pressr = false;
 	break;
       default:
 	break;
