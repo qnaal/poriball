@@ -74,13 +74,14 @@ typedef struct {
 
 
 // prototypes
+float time();
 Contact make_contact();
 bool init_video();
 Player make_player(float x, float y);
-void move_player(Player *p);
+void move_player(Player *p, float physdt);
 void draw_player(GameData *game, Player *p, SDL_Surface *img);
 Ball spawn_ball(float x, float y);
-void move_ball(Ball *b);
+void move_ball(Ball *b, float physdt);
 void draw_ball(GameData *game, Ball *b);
 float clamp(float x, float min, float max);
 void draw_world(World *world, GameData *game);
@@ -96,7 +97,7 @@ Pt carterize(PtPol pol);
 Contact collision_wall(Ball *b);
 Contact collision_player(Ball *b, Player *p);
 void handle_collisions(World *w);
-void physics(World *world);
+void physics(World *world, float physdt);
 
 // functions
 int main() {
@@ -110,18 +111,32 @@ int main() {
   game.colbg = SDL_MapRGB(game.screen->format, 0xd0, 0xd0, 0xd0);
   game.porimg = IMG_Load(PORIMG); //200x100px, with the point 100,90 being the base point
 
+  float phys_dt = 1/GAME_SPEED;
+  float t0;
+  float t1 = time();
+  float phys_accum = 0.0;
+
   while(world.running) {
 
-    handle_events(&world);
+    t0 = t1;
+    t1 = time();
+    phys_accum += t1 - t0;
 
-    physics(&world);
+    while (phys_accum >= phys_dt) {
+      handle_events(&world);
+      phys_accum -= phys_dt;
+      physics(&world, phys_dt);
+    }
 
     draw_world(&world, &game);
 
-    SDL_Delay(1000 / GAME_SPEED);
-
   };
   return 0;
+}
+
+// returns time since init in seconds
+float time() {
+  return (float)SDL_GetTicks() / 1000;
 }
 
 Contact make_contact() {
@@ -159,12 +174,12 @@ Player make_player(float x, float y) {
   return p;
 }
 
-void move_player(Player *p) {
+void move_player(Player *p, float dt) {
   int dir= 0;
   if (p->kr) dir++;
   if (p->kl) dir--;
   p->vel.x = dir * PLAYER_SPEED;
-  p->pos.x = p->pos.x + p->vel.x / GAME_SPEED;
+  p->pos.x = p->pos.x + p->vel.x * dt;
 }
 
 void draw_player(GameData *game, Player *p, SDL_Surface *img) {
@@ -180,10 +195,10 @@ Ball spawn_ball(float x, float y) {
   return b;
 }
 
-void move_ball(Ball *b) {
-  b->pos = vsum( b->pos, vmlt( 1 / GAME_SPEED, b->vel));
+void move_ball(Ball *b, float dt) {
+  b->pos = vsum( b->pos, vmlt( dt, b->vel));
   b->vel = vsum( b->vel,
-		 vmlt( 1.0 / GAME_SPEED, (Pt){ 0.0, -BALL_ACC }));
+		 vmlt( dt, (Pt){ 0.0, -BALL_ACC }));
 }
 
 void draw_ball(GameData *game, Ball *b) {
@@ -339,8 +354,8 @@ void handle_collisions(World *w) {
   }
 }
 
-void physics(World *world) {
-  move_player(&world->p1);
+void physics(World *world, float dt) {
+  move_player(&world->p1, dt);
   handle_collisions(world);
-  move_ball(&world->b);
+  move_ball(&world->b, dt);
 }
