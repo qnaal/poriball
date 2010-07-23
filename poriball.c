@@ -102,6 +102,7 @@ void physics(World *world, float physdt);
 // functions
 int main() {
   World world;
+  world.running = true;
   world.p1 = make_player(100.0, 0.0);
   world.b = spawn_ball(100.0, 200.0);
   GameData game;
