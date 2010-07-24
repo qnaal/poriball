@@ -46,9 +46,12 @@ typedef struct {
   Pt pos;			// px
   int r;
   Pt vel;			// px/s
-  // keys
+  // keys pressed
   bool pressl;
   bool pressr;
+  // keys mapped
+  SDLKey keyl;
+  SDLKey keyr;
 } Player;
 
 typedef struct {
@@ -101,16 +104,16 @@ void physics(World *world, float physdt);
 
 // functions
 int main() {
-  World world;
-  world.running = true;
-  world.p1 = make_player(100.0, 0.0);
-  world.b = spawn_ball(100.0, 200.0);
   GameData game;
-
   init_video(&game);
   game.colfg = SDL_MapRGB(game.screen->format, 0x80, 0x80, 0x80);
   game.colbg = SDL_MapRGB(game.screen->format, 0xd0, 0xd0, 0xd0);
   game.porimg = IMG_Load(PORIMG); //200x100px, with the point 100,90 being the base point
+
+  World world;
+  world.running = true;
+  world.p1 = make_player(100.0, 0.0);
+  world.b = spawn_ball(100.0, 200.0);
 
   float phys_dt = 1/GAME_SPEED;
   float t0;
@@ -165,6 +168,20 @@ bool init_video(GameData *game) {
   return true;
 }
 
+SDLKey wait_for_key() {
+  SDL_Event event;
+  while (event.type != SDL_KEYDOWN)
+    SDL_WaitEvent(&event);
+  return event.key.keysym.sym;
+}
+
+SDLKey key_prompt(char subject[], char object[]) {
+  printf("%s press %s\n", subject, object);
+  SDLKey key = wait_for_key();
+  printf("%s %s is %s\n", subject, object, SDL_GetKeyName(key));
+  return key;
+}
+
 Player make_player(float x, float y) {
   Player p;
   p.pos = (Pt){x,y};
@@ -172,6 +189,10 @@ Player make_player(float x, float y) {
   p.vel = (Pt){0.0,0.0};
   p.pressl = false;
   p.pressr = false;
+
+  p.keyl = key_prompt("player 1", "LEFT");
+  p.keyr = key_prompt("player 1", "RIGHT");
+
   return p;
 }
 
@@ -239,6 +260,7 @@ void handle_events(World *world) {
 	world->running = false;
 	break;
       default:
+	printf("%s\n", SDL_GetKeyName(event.key.keysym.sym));
 	break;
       }
       break;
