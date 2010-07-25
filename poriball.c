@@ -78,6 +78,8 @@ typedef struct {
 float time();
 Contact make_contact();
 bool init_video();
+SDLKey wait_for_key();
+SDLKey key_prompt(char subject[], char object[]);
 Player make_player(float x, float y);
 void move_player(Player *p, float physdt);
 void draw_player(GameData *game, Player *p, SDL_Surface *img);
