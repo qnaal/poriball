@@ -18,8 +18,6 @@
 #define BALL_ACC 1000
 
 #define KEY_QUIT SDLK_q
-#define KEY_P1_L SDLK_s
-#define KEY_P1_R SDLK_f
 
 #define PORIMG "slime.png"
 
@@ -249,31 +247,24 @@ void handle_events(World *world) {
   while(SDL_PollEvent(&event)) {
     switch(event.type) {
     case SDL_KEYDOWN:
-      switch(event.key.keysym.sym){
-      case KEY_P1_L:
+      if (event.key.keysym.sym == world->p1.keyl) {
 	world->p1.pressl = true;
-	break;
-      case KEY_P1_R:
-	world->p1.pressr = true;
-	break;
-      case KEY_QUIT:
-	world->running = false;
-	break;
-      default:
-	printf("%s\n", SDL_GetKeyName(event.key.keysym.sym));
-	break;
       }
+      else if (event.key.keysym.sym == world->p1.keyr) {
+	world->p1.pressr = true;
+      }
+      else if (event.key.keysym.sym == KEY_QUIT) {
+	world->running = false;
+      }
+      else
+	printf("%s\n", SDL_GetKeyName(event.key.keysym.sym));
       break;
     case SDL_KEYUP:
-      switch(event.key.keysym.sym){
-      case KEY_P1_L:
+      if (event.key.keysym.sym == world->p1.keyl) {
 	world->p1.pressl = false;
-	break;
-      case KEY_P1_R:
+      }
+      else if (event.key.keysym.sym == world->p1.keyr) {
 	world->p1.pressr = false;
-	break;
-      default:
-	break;
       }
       break;
     case SDL_QUIT:
