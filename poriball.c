@@ -442,8 +442,10 @@ void handle_collisions(World *w) {
     Contact *big;
     float big_size = 0;
     for (c = &contacts[0]; c < &contacts[cntnum]; c++){
-      if (c->depth > big_size)
+      if (c->depth > big_size){
 	big = c;
+	big_size = c->depth;
+      }
     }
     if (big->depth != 0.0) {
       float dvelr = -2 * abs( vdot( vsum( big->bvel, vinv(big->ovel) ),
