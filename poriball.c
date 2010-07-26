@@ -19,6 +19,8 @@
 
 #define KEY_QUIT SDLK_q
 
+#define MAX_DUDES 10
+
 #define PORIMG "slime.png"
 
 // structures
@@ -62,7 +64,8 @@ typedef struct {
 
 typedef struct {
   bool running;
-  Player p1;
+  unsigned pnum;		// number of players
+  Player players[MAX_DUDES];
   Ball b;
 } World;
 
@@ -112,8 +115,13 @@ int main() {
 
   World world;
   world.running = true;
-  world.p1 = make_player(100.0, 0.0);
   world.b = spawn_ball(100.0, 200.0);
+
+  world.pnum = 1;
+  int i;
+  for (i=0;i<world.pnum;i++){
+    world.players[i] = make_player(100,0);
+  }
 
   float phys_dt = 1/GAME_SPEED;
   float t0;
@@ -179,6 +187,7 @@ SDLKey key_prompt(char subject[], char object[]) {
   printf("%s press %s\n", subject, object);
   SDLKey key = wait_for_key();
   printf("%s %s is %s\n", subject, object, SDL_GetKeyName(key));
+  printf("\n");	  // SDL chokes a fat one if I don't push two newlines
   return key;
 }
 
@@ -239,34 +248,52 @@ float clamp(float x, float min, float max) {
 
 void draw_world(World *world, GameData *game) {
   SDL_FillRect(game->screen, NULL, game->colbg);
-  draw_player(game, &world->p1, game->porimg);
+  int i;
+  for (i=0;i<world->pnum;i++){
+    draw_player(game, &world->players[i], game->porimg);
+  }
   draw_ball(game, &world->b);
   SDL_Flip(game->screen);
 }
 
 void handle_events(World *world) {
   SDL_Event event;
+  int i;
+  Player *p;
+  bool done = false;
   while(SDL_PollEvent(&event)) {
     switch(event.type) {
     case SDL_KEYDOWN:
-      if (event.key.keysym.sym == world->p1.keyl) {
-	world->p1.pressl = true;
+      for (i=0;i<world->pnum;i++){
+	p = &world->players[i];
+	if(event.key.keysym.sym == p->keyl){
+	  p->pressl = true;
+	  done = true;
+	}
+	else if(event.key.keysym.sym == p->keyr){
+	  p->pressr = true;
+	  done = true;
+	}
       }
-      else if (event.key.keysym.sym == world->p1.keyr) {
-	world->p1.pressr = true;
+      if (!done){
+	if (event.key.keysym.sym == KEY_QUIT) {
+	  world->running = false;
+	}
+	else
+	  printf("%s\n", SDL_GetKeyName(event.key.keysym.sym));
       }
-      else if (event.key.keysym.sym == KEY_QUIT) {
-	world->running = false;
-      }
-      else
-	printf("%s\n", SDL_GetKeyName(event.key.keysym.sym));
       break;
     case SDL_KEYUP:
-      if (event.key.keysym.sym == world->p1.keyl) {
-	world->p1.pressl = false;
-      }
-      else if (event.key.keysym.sym == world->p1.keyr) {
-	world->p1.pressr = false;
+      for (i=0;i<world->pnum;i++){
+	p = &world->players[i];
+	if(event.key.keysym.sym == p->keyl){
+	  p->pressl = false;
+	  done = true;
+	}
+	else if(event.key.keysym.sym == p->keyr){
+	  p->pressr = false;
+	  done = true;
+	}
       }
       break;
     case SDL_QUIT:
@@ -355,23 +382,29 @@ Contact collision_wall(Ball *b) {
 
 void handle_collisions(World *w) {
   Ball *b = &w->b;
-  Player *p = &w->p1;
-  Contact contact = collision_wall(b);
-  // FIXME: kind of messy
-  if ( contact.depth == 0.0 )
-    contact = collision_player(b, p);
-  if (contact.depth != 0.0) {
-    float dvelr = -2 * abs( vdot( vsum( contact.bvel, vinv(contact.ovel) ),
-				  carterize( (PtPol){1.0, contact.normal} )
-				  )
-			    );
-    Pt dvel = carterize( (PtPol){dvelr, contact.normal} );
-    b->vel = vsum( b->vel, dvel );
+  int i;
+  for (i=0;i<w->pnum;i++){
+    Player *p = &w->players[i];
+    Contact contact = collision_wall(b);
+    // FIXME: kind of messy
+    if ( contact.depth == 0.0 )
+      contact = collision_player(b, p);
+    if (contact.depth != 0.0) {
+      float dvelr = -2 * abs( vdot( vsum( contact.bvel, vinv(contact.ovel) ),
+				    carterize( (PtPol){1.0, contact.normal} )
+				    )
+			      );
+      Pt dvel = carterize( (PtPol){dvelr, contact.normal} );
+      b->vel = vsum( b->vel, dvel );
+    }
   }
 }
 
 void physics(World *world, float dt) {
-  move_player(&world->p1, dt);
+  int i;
+  for (i=0;i<world->pnum;i++){
+    move_player(&world->players[i], dt);
+  }
   handle_collisions(world);
   move_ball(&world->b, dt);
 }
