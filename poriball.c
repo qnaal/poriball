@@ -395,23 +395,35 @@ void handle_collisions(World *w) {
   Ball *b = &w->b;
   Contact contacts[MAX_CONTACTS];
   int cntnum = 0;
+
+  // Player contacts
   Player *p;
   for (p = &w->players[0]; p < &w->players[w->pnum]; p++){
     contacts[cntnum] = collision_player(b, p);
     if ( contacts[cntnum].depth != 0.0 )
       cntnum++;
   }
+
+  // Wall contacts
   contacts[cntnum] = collision_wall(b);
   if ( contacts[cntnum].depth != 0.0 )
     cntnum++;
-  Contact *c;
-  for (c = &contacts[0]; c < &contacts[cntnum]; c++){
-    if (c->depth != 0.0) {
-      float dvelr = -2 * abs( vdot( vsum( c->bvel, vinv(c->ovel) ),
-				    carterize( (PtPol){1.0, c->normal} )
+
+  // Use the largest contact for each ball
+  if (cntnum>0){
+    Contact *c;
+    Contact *big;
+    float big_size = 0;
+    for (c = &contacts[0]; c < &contacts[cntnum]; c++){
+      if (c->depth > big_size)
+	big = c;
+    }
+    if (big->depth != 0.0) {
+      float dvelr = -2 * abs( vdot( vsum( big->bvel, vinv(big->ovel) ),
+				    carterize( (PtPol){1.0, big->normal} )
 				    )
 			      );
-      Pt dvel = carterize( (PtPol){dvelr, c->normal} );
+      Pt dvel = carterize( (PtPol){dvelr, big->normal} );
       b->vel = vsum( b->vel, dvel );
     }
   }
