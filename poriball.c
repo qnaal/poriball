@@ -148,6 +148,9 @@ int main() {
 
     draw_world(&world, &game);
 
+    if (world.b.pos.y < BALL_RADIUS)
+      world.b = spawn_ball(world.players[0].pos.x, 200.0);
+
   };
   return 0;
 }
