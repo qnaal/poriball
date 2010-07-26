@@ -19,7 +19,7 @@
 
 #define KEY_QUIT SDLK_q
 
-#define MAX_DUDES 10
+#define MAX_DUDES 2
 
 #define PORIMG "slime.png"
 
@@ -84,6 +84,7 @@ bool init_video();
 SDLKey wait_for_key();
 SDLKey key_prompt(char subject[], char object[]);
 Player make_player(float x, float y);
+void players_key_prompt(World *w);
 void move_player(Player *p, float physdt);
 void draw_player(GameData *game, Player *p, SDL_Surface *img);
 Ball spawn_ball(float x, float y);
@@ -107,6 +108,7 @@ void physics(World *world, float physdt);
 
 // functions
 int main() {
+  srand(time(NULL));
   GameData game;
   init_video(&game);
   game.colfg = SDL_MapRGB(game.screen->format, 0x80, 0x80, 0x80);
@@ -115,13 +117,16 @@ int main() {
 
   World world;
   world.running = true;
-  world.b = spawn_ball(100.0, 200.0);
 
-  world.pnum = 1;
+  world.pnum = MAX_DUDES;
   int i;
   for (i=0;i<world.pnum;i++){
-    world.players[i] = make_player(100,0);
+    float placement = PLAYER_RADIUS + ((float)rand() * (SCREEN_WIDTH - 2 * PLAYER_RADIUS)) / RAND_MAX;
+    world.players[i] = make_player(placement,0);
   }
+  players_key_prompt(&world);
+
+  world.b = spawn_ball(world.players[0].pos.x, 200.0);
 
   float phys_dt = 1/GAME_SPEED;
   float t0;
@@ -199,10 +204,19 @@ Player make_player(float x, float y) {
   p.pressl = false;
   p.pressr = false;
 
-  p.keyl = key_prompt("player 1", "LEFT");
-  p.keyr = key_prompt("player 1", "RIGHT");
-
   return p;
+}
+
+void players_key_prompt(World *w) {
+  int i;
+  Player *p;
+  char name[16];		// how do normal people do this?
+  for (i=0;i<w->pnum;i++){
+    p = &w->players[i];
+    sprintf(name,"player %i",i);
+    p->keyl = key_prompt(name, "LEFT");
+    p->keyr = key_prompt(name, "RIGHT");
+  }
 }
 
 void move_player(Player *p, float dt) {
@@ -382,19 +396,26 @@ Contact collision_wall(Ball *b) {
 
 void handle_collisions(World *w) {
   Ball *b = &w->b;
+  Contact contacts[32];
+  int cntnum = 0;
   int i;
   for (i=0;i<w->pnum;i++){
     Player *p = &w->players[i];
-    Contact contact = collision_wall(b);
-    // FIXME: kind of messy
-    if ( contact.depth == 0.0 )
-      contact = collision_player(b, p);
-    if (contact.depth != 0.0) {
-      float dvelr = -2 * abs( vdot( vsum( contact.bvel, vinv(contact.ovel) ),
-				    carterize( (PtPol){1.0, contact.normal} )
+    contacts[cntnum] = collision_player(b, p);
+    if ( contacts[cntnum].depth != 0.0 )
+      cntnum++;
+  }
+  contacts[cntnum] = collision_wall(b);
+  if ( contacts[cntnum].depth != 0.0 )
+    cntnum++;
+  for (i=0;i<cntnum;i++){
+    Contact *c = &contacts[i];
+    if (c->depth != 0.0) {
+      float dvelr = -2 * abs( vdot( vsum( c->bvel, vinv(c->ovel) ),
+				    carterize( (PtPol){1.0, c->normal} )
 				    )
 			      );
-      Pt dvel = carterize( (PtPol){dvelr, contact.normal} );
+      Pt dvel = carterize( (PtPol){dvelr, c->normal} );
       b->vel = vsum( b->vel, dvel );
     }
   }
