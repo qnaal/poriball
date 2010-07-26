@@ -11,11 +11,13 @@
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
+#define ADTG 1000		// Acceleration Due To Gravity
+
 #define PLAYER_RADIUS 80
 #define PLAYER_SPEED 500	// px/s
+#define JUMP_VEL 400
 
 #define BALL_RADIUS 10
-#define BALL_ACC 1000
 
 #define KEY_QUIT SDLK_q
 
@@ -50,9 +52,11 @@ typedef struct {
   // keys pressed
   bool pressl;
   bool pressr;
+  bool pressj;
   // keys mapped
   SDLKey keyl;
   SDLKey keyr;
+  SDLKey keyj;
 } Player;
 
 typedef struct {
@@ -220,15 +224,27 @@ void players_key_prompt(World *w) {
     sprintf(name,"player %i",i);
     p->keyl = key_prompt(name, "LEFT");
     p->keyr = key_prompt(name, "RIGHT");
+    p->keyj = key_prompt(name, "JUMP");
   }
 }
 
 void move_player(Player *p, float dt) {
-  int dir= 0;
-  if (p->pressr) dir++;
-  if (p->pressl) dir--;
-  p->vel.x = dir * PLAYER_SPEED;
-  p->pos.x = p->pos.x + p->vel.x * dt;
+  if (p->pos.y < 0){
+    p->pos.y = 0;
+    p->vel.y = 0;
+  }
+  if (p->pos.y == 0){
+    if (p->pressj)
+      p->vel.y = JUMP_VEL;
+    int dir= 0;
+    if (p->pressr) dir++;
+    if (p->pressl) dir--;
+    p->vel.x = dir * PLAYER_SPEED;
+  }
+  else {
+    p->vel = vsum( p->vel, vmlt(dt, (Pt){0,-ADTG}) );
+  }
+  p->pos = vsum( p->pos, vmlt(dt, p->vel) );
 }
 
 void draw_player(GameData *game, Player *p, SDL_Surface *img) {
@@ -247,7 +263,7 @@ Ball spawn_ball(float x, float y) {
 void move_ball(Ball *b, float dt) {
   b->pos = vsum( b->pos, vmlt( dt, b->vel));
   b->vel = vsum( b->vel,
-		 vmlt( dt, (Pt){ 0.0, -BALL_ACC }));
+		 vmlt( dt, (Pt){ 0.0, -ADTG }));
 }
 
 void draw_ball(GameData *game, Ball *b) {
@@ -289,6 +305,10 @@ void handle_events(World *world) {
 	  p->pressr = true;
 	  done = true;
 	}
+	else if(event.key.keysym.sym == p->keyj){
+	  p->pressj = true;
+	  done = true;
+	}
       }
       if (!done){
 	if (event.key.keysym.sym == KEY_QUIT) {
@@ -306,6 +326,10 @@ void handle_events(World *world) {
 	}
 	else if(event.key.keysym.sym == p->keyr){
 	  p->pressr = false;
+	  done = true;
+	}
+	else if(event.key.keysym.sym == p->keyj){
+	  p->pressj = false;
 	  done = true;
 	}
       }
