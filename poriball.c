@@ -20,6 +20,7 @@
 #define KEY_QUIT SDLK_q
 
 #define MAX_DUDES 2
+#define MAX_CONTACTS 32
 
 #define PORIMG "slime.png"
 
@@ -119,10 +120,10 @@ int main() {
   world.running = true;
 
   world.pnum = MAX_DUDES;
-  int i;
-  for (i=0;i<world.pnum;i++){
+  Player *p;
+  for (p = &world.players[0]; p < &world.players[world.pnum]; p++){
     float placement = PLAYER_RADIUS + ((float)rand() * (SCREEN_WIDTH - 2 * PLAYER_RADIUS)) / RAND_MAX;
-    world.players[i] = make_player(placement,0);
+    *p = make_player(placement,0);
   }
   players_key_prompt(&world);
 
@@ -262,24 +263,21 @@ float clamp(float x, float min, float max) {
 
 void draw_world(World *world, GameData *game) {
   SDL_FillRect(game->screen, NULL, game->colbg);
-  int i;
-  for (i=0;i<world->pnum;i++){
-    draw_player(game, &world->players[i], game->porimg);
-  }
+  Player *p;
+  for (p = &world->players[0]; p < &world->players[world->pnum]; p++)
+    draw_player(game, p, game->porimg);
   draw_ball(game, &world->b);
   SDL_Flip(game->screen);
 }
 
 void handle_events(World *world) {
   SDL_Event event;
-  int i;
   Player *p;
   bool done = false;
   while(SDL_PollEvent(&event)) {
     switch(event.type) {
     case SDL_KEYDOWN:
-      for (i=0;i<world->pnum;i++){
-	p = &world->players[i];
+      for (p = &world->players[0]; p < &world->players[world->pnum]; p++){
 	if(event.key.keysym.sym == p->keyl){
 	  p->pressl = true;
 	  done = true;
@@ -298,8 +296,7 @@ void handle_events(World *world) {
       }
       break;
     case SDL_KEYUP:
-      for (i=0;i<world->pnum;i++){
-	p = &world->players[i];
+      for (p = &world->players[0]; p < &world->players[world->pnum]; p++){
 	if(event.key.keysym.sym == p->keyl){
 	  p->pressl = false;
 	  done = true;
@@ -396,11 +393,10 @@ Contact collision_wall(Ball *b) {
 
 void handle_collisions(World *w) {
   Ball *b = &w->b;
-  Contact contacts[32];
+  Contact contacts[MAX_CONTACTS];
   int cntnum = 0;
-  int i;
-  for (i=0;i<w->pnum;i++){
-    Player *p = &w->players[i];
+  Player *p;
+  for (p = &w->players[0]; p < &w->players[w->pnum]; p++){
     contacts[cntnum] = collision_player(b, p);
     if ( contacts[cntnum].depth != 0.0 )
       cntnum++;
@@ -408,8 +404,8 @@ void handle_collisions(World *w) {
   contacts[cntnum] = collision_wall(b);
   if ( contacts[cntnum].depth != 0.0 )
     cntnum++;
-  for (i=0;i<cntnum;i++){
-    Contact *c = &contacts[i];
+  Contact *c;
+  for (c = &contacts[0]; c < &contacts[cntnum]; c++){
     if (c->depth != 0.0) {
       float dvelr = -2 * abs( vdot( vsum( c->bvel, vinv(c->ovel) ),
 				    carterize( (PtPol){1.0, c->normal} )
