@@ -1,4 +1,4 @@
-SRC = poriball.c
+SRC = poriball.c vector.c physics.c io.c
 CC = cc
 CFLAGS = -g -Wall ${INCS}
 INCS = -I/usr/include/SDL
