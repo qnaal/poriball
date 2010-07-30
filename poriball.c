@@ -18,6 +18,7 @@
 #define JUMP_VEL 400
 
 #define BALL_RADIUS 10
+#define ELASTICITY 1.0 // Elasticity of collisions, 1=fully elastic, 0=lame
 
 #define KEY_QUIT SDLK_q
 
@@ -419,6 +420,7 @@ Contact collision_wall(Ball *b) {
 }
 
 void handle_collisions(World *w) {
+  static bool hitlast = true;
   Ball *b = &w->b;
   Contact contacts[MAX_CONTACTS];
   int cntnum = 0;
@@ -437,24 +439,33 @@ void handle_collisions(World *w) {
     cntnum++;
 
   // Use the largest contact for each ball
-  if (cntnum>0){
-    Contact *c;
-    Contact *big;
-    float big_size = 0;
-    for (c = &contacts[0]; c < &contacts[cntnum]; c++){
-      if (c->depth > big_size){
-	big = c;
-	big_size = c->depth;
+  if (hitlast==false){
+    if (cntnum>0){
+      hitlast = true;
+      Contact *c;
+      Contact *big;
+      float big_size = 0;
+      for (c = &contacts[0]; c < &contacts[cntnum]; c++){
+	if (c->depth > big_size){
+	  big = c;
+	  big_size = c->depth;
+	}
+      }
+      if (big->depth != 0.0) {
+	// FIXME: in the case that Ball is going in dir X at speed S,
+	// and Dude collides from behind, going in dir X at speed S+n,
+	// this logic fails. ...I think...
+	float dvelr = -(1 + ELASTICITY) * abs( vdot( vsum( big->bvel, vinv(big->ovel) ),
+						     carterize( (PtPol){1.0, big->normal} )
+						     )
+					       );
+	Pt dvel = carterize( (PtPol){dvelr, big->normal} );
+	b->vel = vsum( b->vel, dvel );
       }
     }
-    if (big->depth != 0.0) {
-      float dvelr = -2 * abs( vdot( vsum( big->bvel, vinv(big->ovel) ),
-				    carterize( (PtPol){1.0, big->normal} )
-				    )
-			      );
-      Pt dvel = carterize( (PtPol){dvelr, big->normal} );
-      b->vel = vsum( b->vel, dvel );
-    }
+  } /* hitlast==false */
+  else {
+    hitlast = false;
   }
 }
 
