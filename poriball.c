@@ -108,6 +108,7 @@ float clamp(float x, float min, float max);
 void draw_world(World *world, GameData *game);
 void handle_events(World *world);
 Pt vsum(Pt pt1, Pt pt2);
+Pt vdif(Pt pt1, Pt pt2);
 Pt vmlt(float s, Pt pt);
 Pt vinv(Pt pt);
 float vdot(Pt pt1, Pt pt2);
@@ -364,6 +365,10 @@ Pt vsum(Pt pt1, Pt pt2) {
   return sum;
 }
 
+Pt vdif(Pt pt1, Pt pt2) {
+  return vsum(pt1, vinv(pt2));
+}
+
 // scalar multiplication
 Pt vmlt(float s, Pt pt) {
   float x = s * pt.x;
@@ -419,12 +424,12 @@ Contact collision_player(Ball *b, Player *p) {
 }
 
 Contact collision_wall(Ball *b, Wall *w) {
-  Pt bpos = vsum( b->pos, vinv(w->pos) ); // relative position
+  Pt bpos = vdif( b->pos, w->pos ); // relative position
   // close_r: distance along w from w.pos to the closest pt to b.pos
   float close_r = cos(w->theta - azimuth(bpos)) * pythag(bpos);
   //float close_r = vdot( carterize((PtPol){1,w->theta}), bpos ); // I LOVE BOTH OF THESE SO MUCH I CAN'T PICK JUST ONE
   Pt close = carterize( (PtPol){close_r,w->theta} );
-  Pt diff = vsum( close, vinv(bpos) );
+  Pt diff = vdif( close, bpos );
   float diff_r = pythag(diff);
   Contact contact = zero_contact();
   contact.depth = b->r - diff_r;
@@ -478,7 +483,7 @@ void handle_collisions(World *w) {
 	// FIXME: in the case that Ball is going in dir X at speed S,
 	// and Dude collides from behind, going in dir X at speed S+n,
 	// this logic fails. ...I think...
-	float dvelr = -(1 + ELASTICITY) * abs( vdot( vsum( big->bvel, vinv(big->ovel) ),
+	float dvelr = -(1 + ELASTICITY) * abs( vdot( vdif( big->bvel, big->ovel ),
 						     carterize( (PtPol){1.0, big->normal} )
 						     )
 					       );
