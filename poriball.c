@@ -7,7 +7,7 @@
 
 // macros
 #define PI M_PI
-#define GAME_SPEED 100.0	// updates/s
+#define GAME_SPEED 200.0	// updates/s
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
@@ -69,9 +69,16 @@ typedef struct {
 } Ball;
 
 typedef struct {
+  Pt pos;
+  float theta;			// Angle of wall, 0 < theta < PI
+} Wall;
+
+typedef struct {
   bool running;
   unsigned pnum;		// number of players
   Player players[MAX_DUDES];
+  unsigned wnum;
+  Wall walls[5];
   Ball b;
 } World;
 
@@ -85,7 +92,8 @@ typedef struct {
 
 // prototypes
 float time();
-Contact make_contact();
+Contact zero_contact();
+Wall make_wall(Pt pos, float theta);
 bool init_video();
 SDLKey wait_for_key();
 SDLKey key_prompt(char subject[], char object[]);
@@ -107,7 +115,7 @@ float pythag(Pt pt);
 float azimuth(Pt pt);
 PtPol polarize(Pt pt);
 Pt carterize(PtPol pol);
-Contact collision_wall(Ball *b);
+Contact collision_wall(Ball *b, Wall *w);
 Contact collision_player(Ball *b, Player *p);
 void handle_collisions(World *w);
 void physics(World *world, float physdt);
@@ -131,6 +139,11 @@ int main() {
     *p = make_player(placement,0);
   }
   players_key_prompt(&world);
+
+  world.wnum = 3;
+  world.walls[0] = make_wall( (Pt){0,0}, PI/2 );
+  world.walls[1] = make_wall( (Pt){SCREEN_WIDTH,0}, PI/2 );
+  world.walls[2] = make_wall( (Pt){0,SCREEN_HEIGHT}, 0 ); // RACQUETBALL
 
   world.b = spawn_ball(world.players[0].pos.x, 200.0);
 
@@ -165,13 +178,17 @@ float time() {
   return (float)SDL_GetTicks() / 1000;
 }
 
-Contact make_contact() {
+Contact zero_contact() {
   Contact c;
   c.depth = 0.0;
   c.normal = 0.0;
   c.bvel = (Pt){0.0,0.0};
   c.ovel = (Pt){0.0,0.0};
   return c;
+}
+
+Wall make_wall(Pt pos, float theta){
+  return (Wall){pos, theta};
 }
 
 bool init_video(GameData *game) {
@@ -390,7 +407,7 @@ Contact collision_player(Ball *b, Player *p) {
   float mindist = b->r + p->r;
   Pt dif = vsum(p->pos, vmlt(-1, b->pos));
   PtPol dif_pol = polarize( dif );
-  Contact contact = make_contact();
+  Contact contact = zero_contact();
   if (dif_pol.r < mindist) {
     float dist =  dif_pol.r;
     contact.depth = mindist - dist;
@@ -401,20 +418,22 @@ Contact collision_player(Ball *b, Player *p) {
   return contact;
 }
 
-Contact collision_wall(Ball *b) {
-  float x = b->pos.x;
-  float r = b->r;
-  float w1 = 0;
-  float w2 = SCREEN_WIDTH;
-  Contact contact = make_contact();
-  contact.bvel = b->vel;
-  if ( x - r < w1 ) {
-    contact.depth = r - x;
-    contact.normal = PI;
+Contact collision_wall(Ball *b, Wall *w) {
+  Pt bpos = vsum( b->pos, vinv(w->pos) ); // relative position
+  // close_r: distance along w from w.pos to the closest pt to b.pos
+  float close_r = cos(w->theta - azimuth(bpos)) * pythag(bpos);
+  //float close_r = vdot( carterize((PtPol){1,w->theta}), bpos ); // I LOVE BOTH OF THESE SO MUCH I CAN'T PICK JUST ONE
+  Pt close = carterize( (PtPol){close_r,w->theta} );
+  Pt diff = vsum( close, vinv(bpos) );
+  float diff_r = pythag(diff);
+  Contact contact = zero_contact();
+  contact.depth = b->r - diff_r;
+  if (contact.depth < 0){
+    contact.depth = 0;
   }
-  else if ( x + r > w2 ) {
-    contact.depth = x + r - w2;
-    contact.normal = 0.0;
+  else {
+    contact.normal = azimuth(diff); // This is always going to be the same as w->theta +/- PI/2
+    contact.bvel = b->vel;
   }
   return contact;
 }
@@ -434,9 +453,13 @@ void handle_collisions(World *w) {
   }
 
   // Wall contacts
-  contacts[cntnum] = collision_wall(b);
-  if ( contacts[cntnum].depth != 0.0 )
-    cntnum++;
+  Wall *wall;
+  for (wall = &w->walls[0]; wall < &w->walls[w->wnum]; wall++){
+    contacts[cntnum] = collision_wall(b, wall);
+    if ( contacts[cntnum].depth != 0.0 ){
+      cntnum++;
+    }
+  }
 
   // Use the largest contact for each ball
   if (hitlast==false){
