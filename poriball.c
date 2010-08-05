@@ -33,6 +33,7 @@ int main() {
   for (p = &world.players[0]; p < &world.players[world.pnum]; p++){
     float placement = PLAYER_RADIUS + ((float)rand() * (SCREEN_WIDTH - 2 * PLAYER_RADIUS)) / RAND_MAX;
     *p = make_player(placement,0);
+    p->skywalk = SKYWALK;
   }
   players_key_prompt(&world);
 

@@ -7,6 +7,7 @@
 #define PLAYER_RADIUS 80
 #define PLAYER_SPEED 500	// px/s
 #define JUMP_VEL 400
+#define SKYWALK false
 
 #define BALL_RADIUS 10
 #define ELASTICITY 0.8 // Elasticity of collisions, 1=fully elastic, 0=lame

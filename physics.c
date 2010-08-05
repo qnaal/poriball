@@ -15,13 +15,15 @@ void move_player(Player *p, float dt) {
     p->pos.y = 0;
     p->vel.y = 0;
   }
-  if (p->pos.y == 0){
-    if (p->pressj)
-      p->vel.y = JUMP_VEL;
+  if (p->pos.y == 0 || p->skywalk){
     int dir= 0;
     if (p->pressr) dir++;
     if (p->pressl) dir--;
     p->vel.x = dir * PLAYER_SPEED;
+  }
+  if (p->pos.y == 0){
+    if (p->pressj)
+      p->vel.y = JUMP_VEL;
   }
   else {
     p->vel = vsum( p->vel, vmlt(dt, (Pt){0,-ADTG}) );

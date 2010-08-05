@@ -19,6 +19,8 @@ typedef struct {
   SDLKey keyl;
   SDLKey keyr;
   SDLKey keyj;
+  // misc
+  bool skywalk;
 } Player;
 
 typedef struct {
