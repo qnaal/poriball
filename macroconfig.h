@@ -9,7 +9,7 @@
 #define JUMP_VEL 400
 
 #define BALL_RADIUS 10
-#define ELASTICITY 1.0 // Elasticity of collisions, 1=fully elastic, 0=lame
+#define ELASTICITY 0.8 // Elasticity of collisions, 1=fully elastic, 0=lame
 
 #define KEY_QUIT SDLK_q
 
