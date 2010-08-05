@@ -7,38 +7,38 @@
 #include "vector.h"
 
 typedef struct {
-  // pos/size
-  Pt pos;			// px
+  /* pos/size */
+  Pt pos;			 /* px */
   int r;
-  Pt vel;			// px/s
-  // keys pressed
+  Pt vel;			 /* px/s */
+  /* keys pressed */
   bool pressl;
   bool pressr;
   bool pressj;
-  // keys mapped
+  /* keys mapped */
   SDLKey keyl;
   SDLKey keyr;
   SDLKey keyj;
-  // misc
+  /* misc */
   bool skywalk;
 } Player;
 
 typedef struct {
-  //pos/size
-  Pt pos;			// px
+ /* pos/size */
+  Pt pos;			/* px */
   int r;
-  //vel
-  Pt vel;			// px/s
+  /* vel */
+  Pt vel;			/* px/s */
 } Ball;
 
 typedef struct {
   Pt pos;
-  float theta;			// Angle of wall, 0 < theta < PI
+  float theta;			/* Angle of wall; 0 < theta < PI */
 } Wall;
 
 typedef struct {
   bool running;
-  unsigned pnum;		// number of players
+  unsigned pnum;		/* number of players */
   Player players[MAX_DUDES];
   unsigned wnum;
   Wall walls[5];

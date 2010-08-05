@@ -3,10 +3,10 @@
 
 
 typedef struct {
-  float depth;	   // must be positive
-  float normal;	   // the direction the ball intersects into other obj
-  Pt bvel;	   // ball velocity
-  Pt ovel;	   // other obj velocity
+  float depth;	/* must be positive */
+  float normal;	/* the direction the ball intersects into other obj */
+  Pt bvel;	/* ball velocity */
+  Pt ovel;	/* other obj velocity */
 } Contact;
 
 

@@ -7,7 +7,7 @@ typedef struct {
 } Pt;
 
 typedef struct {
-  float r;		   // should be positive when given the choice
+  float r;		/* should be positive when given the choice */
   float theta;
 } PtPol;
 

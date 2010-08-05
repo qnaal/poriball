@@ -10,7 +10,7 @@ Pt vdif(Pt pt1, Pt pt2) {
   return vsum(pt1, vinv(pt2));
 }
 
-// scalar multiplication
+/* scalar multiplication */
 Pt vmlt(float s, Pt pt) {
   float x = s * pt.x;
   float y = s * pt.y;
@@ -22,7 +22,7 @@ Pt vinv(Pt pt) {
   return (Pt){-pt.x,-pt.y};
 }
 
-// dot product
+/* dot product */
 float vdot(Pt pt1, Pt pt2) {
   return pt1.x * pt2.x + pt1.y * pt2.y;
 }
