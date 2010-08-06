@@ -4,12 +4,45 @@
 #include "physics.h"
 #include "vector.h"
 
-void move_ball(Ball *b, float dt) {
+
+typedef struct {
+  float depth;	/* must be positive */
+  float normal;	/* the direction the ball intersects into other obj */
+  Pt bvel;	/* ball velocity */
+  Pt ovel;	/* other obj velocity */
+} Contact;
+
+static Contact zero_contact() {
+  Contact c;
+  c.depth = 0;
+  c.normal = 0;
+  c.bvel = (Pt){0,0};
+  c.ovel = (Pt){0,0};
+  return c;
+}
+
+
+static void move_ball(Ball *b, float physdt);
+static void move_player(Player *p, float physdt);
+static void handle_collisions(World *w);
+
+
+void physics(World *world, float dt) {
+  int i;
+  for( i=0;i < world->pnum;i++ ) {
+    move_player(&world->players[i], dt);
+  }
+  handle_collisions(world);
+  move_ball(&world->b, dt);
+}
+
+
+static void move_ball(Ball *b, float dt) {
   b->pos = vsum( b->pos, vmlt(dt, b->vel) );
   b->vel = vsum( b->vel, vmlt(dt, (Pt){0,-ADTG}) );
 }
 
-void move_player(Player *p, float dt) {
+static void move_player(Player *p, float dt) {
   if( p->pos.y < 0 ) {
     p->pos.y = 0;
     p->vel.y = 0;
@@ -29,16 +62,7 @@ void move_player(Player *p, float dt) {
   p->pos = vsum( p->pos, vmlt(dt, p->vel) );
 }
 
-Contact zero_contact() {
-  Contact c;
-  c.depth = 0;
-  c.normal = 0;
-  c.bvel = (Pt){0,0};
-  c.ovel = (Pt){0,0};
-  return c;
-}
-
-Contact collision_player(Ball *b, Player *p) {
+static Contact collision_player(Ball *b, Player *p) {
   float mindist = b->r + p->r;
   Pt dif = vsum( p->pos, vmlt(-1, b->pos) );
   PtPol dif_pol = polarize( dif );
@@ -53,7 +77,7 @@ Contact collision_player(Ball *b, Player *p) {
   return contact;
 }
 
-Contact collision_wall(Ball *b, Wall *w) {
+static Contact collision_wall(Ball *b, Wall *w) {
   Pt bpos = vdif( b->pos, w->pos ); /* relative position */
   /* close_r: distance along w from w.pos to the closest pt to b.pos */
   float close_r = cos(w->theta - azimuth(bpos)) * pythag(bpos);
@@ -73,7 +97,7 @@ Contact collision_wall(Ball *b, Wall *w) {
   return contact;
 }
 
-void handle_collisions(World *w) {
+static void handle_collisions(World *w) {
   static bool hitlast = true;
   Ball *b = &w->b;
   Contact contacts[MAX_CONTACTS];
@@ -126,13 +150,4 @@ void handle_collisions(World *w) {
   } else {
     hitlast = false;
   } /* hitlast==false */
-}
-
-void physics(World *world, float dt) {
-  int i;
-  for( i=0;i < world->pnum;i++ ) {
-    move_player(&world->players[i], dt);
-  }
-  handle_collisions(world);
-  move_ball(&world->b, dt);
 }

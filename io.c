@@ -28,7 +28,7 @@ bool init_video(GameData *game) {
   return true;
 }
 
-SDLKey wait_for_key() {
+static SDLKey wait_for_key() {
   SDL_Event event;
   while (event.type != SDL_KEYDOWN)
     SDL_WaitEvent(&event);
@@ -43,13 +43,13 @@ SDLKey key_prompt(char subject[], char object[]) {
   return key;
 }
 
-void draw_ball(GameData *game, Ball *b) {
+static void draw_ball(GameData *game, Ball *b) {
   int sq = b->r * 1.8;
   SDL_Rect rect = { b->pos.x - b->r, SCREEN_HEIGHT - (b->pos.y + b->r), sq, sq };
   SDL_FillRect( game->screen, &rect, map_color(game->screen->format, &game->colfg) );
 }
 
-void draw_player(GameData *game, Player *p, SDL_Surface *img) {
+static void draw_player(GameData *game, Player *p, SDL_Surface *img) {
   SDL_Rect dest = { p->pos.x - 100, SCREEN_HEIGHT - (p->pos.y + 90), 0, 0 };
   SDL_BlitSurface( img, NULL, game->screen, &dest );
 }
