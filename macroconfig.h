@@ -2,6 +2,9 @@
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
+#define MSG_FONT "crap/ter-132b.pcf.gz"
+#define MSG_SIZE 32
+
 #define ADTG 1000		/* Acceleration Due To Gravity */
 
 #define PLAYER_RADIUS 80
@@ -17,4 +20,4 @@
 #define MAX_CONTACTS 32
 #define MAX_DUDES 2 /* FIXME: make World.players a resizable array? */
 
-#define PORIMG "slime.png"
+#define PORIMG "crap/slime.png"

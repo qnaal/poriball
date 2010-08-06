@@ -13,7 +13,7 @@
 Ball make_ball(float x, float y);
 Player make_player(float x, float y);
 Wall make_wall(Pt pos, float theta);
-void players_key_prompt(World *w);
+void players_key_prompt(GameData *game, World *w);
 float clamp(float x, float min, float max);
 
 /* functions */
@@ -35,7 +35,7 @@ int main() {
     *p = make_player(placement,0);
     p->skywalk = SKYWALK;
   }
-  players_key_prompt(&world);
+  players_key_prompt(&game, &world);
 
   world.wnum = 3;
   world.walls[0] = make_wall( (Pt){0,0}, M_PI/2 );
@@ -93,7 +93,7 @@ Wall make_wall(Pt pos, float theta) {
   return (Wall){pos, theta};
 }
 
-void players_key_prompt(World *w) {
+void players_key_prompt(GameData *game, World *w) {
   int i;
   Player *p;
   int len = 16;
@@ -101,9 +101,9 @@ void players_key_prompt(World *w) {
     p = &w->players[i];
     char name[len];
     snprintf(name,len,"player %i",i);
-    p->keyl = key_prompt(name, "LEFT");
-    p->keyr = key_prompt(name, "RIGHT");
-    p->keyj = key_prompt(name, "JUMP");
+    p->keyl = key_prompt(game, name, "LEFT");
+    p->keyr = key_prompt(game, name, "RIGHT");
+    p->keyj = key_prompt(game, name, "JUMP");
   }
 }
 

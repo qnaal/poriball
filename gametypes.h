@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include "macroconfig.h"
 #include "vector.h"
 
@@ -50,6 +51,7 @@ typedef struct {
   SDL_Surface *porimg;
   SDL_Color colfg;
   SDL_Color colbg;
+  TTF_Font *font;
 } GameData;
 
 #endif

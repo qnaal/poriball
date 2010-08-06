@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include "gametypes.h"
 
 
@@ -20,6 +21,14 @@ bool init_video(GameData *game) {
   }
   atexit(SDL_Quit);
 
+  if( TTF_Init() == -1 ) {
+    fprintf(stderr, "Unable to initialize SDL_ttf: %s\n", SDL_GetError());
+    return false;
+  }
+  if( (game->font = TTF_OpenFont(MSG_FONT,MSG_SIZE)) == NULL ) {
+    fprintf(stderr, "Unable to load font: %s\n", MSG_FONT);
+  }
+
   game->screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 0, SDL_ANYFORMAT);
   if( game->screen == NULL ) {
     fprintf(stderr, "Unable to initialize video mode: %s\n", SDL_GetError());
@@ -35,11 +44,19 @@ static SDLKey wait_for_key() {
   return event.key.keysym.sym;
 }
 
-SDLKey key_prompt(char subject[], char object[]) {
-  printf("%s press %s\n", subject, object);
+static char msg[128];
+
+SDLKey key_prompt(GameData *game, char subject[], char object[]) {
+  sprintf(msg, "%s press %s", subject, object);
+
+  SDL_FillRect( game->screen, NULL, map_color(game->screen->format, &game->colbg) );
+  SDL_Surface *msg_surface = TTF_RenderText_Solid( game->font, msg, game->colfg );
+  SDL_BlitSurface( msg_surface, NULL, game->screen, NULL );
+  SDL_Flip(game->screen);
+  msg[0] = '\0';
+
   SDLKey key = wait_for_key();
   printf("%s %s is %s\n", subject, object, SDL_GetKeyName(key));
-  printf("\n");	/* SDL chokes a fat one if I don't push two newlines */
   return key;
 }
 
@@ -60,6 +77,8 @@ void draw_world(World *world, GameData *game) {
   for( p = &world->players[0]; p < &world->players[world->pnum]; p++ )
     draw_player(game, p, game->porimg);
   draw_ball(game, &world->b);
+  SDL_Surface *msg_surface = TTF_RenderText_Blended( game->font, msg, game->colfg );
+  SDL_BlitSurface( msg_surface, NULL, game->screen, NULL );
   SDL_Flip(game->screen);
 }
 
