@@ -48,8 +48,8 @@ typedef struct {
 typedef struct {
   SDL_Surface *screen;
   SDL_Surface *porimg;
-  Uint32 colfg;
-  Uint32 colbg;
+  SDL_Color colfg;
+  SDL_Color colbg;
 } GameData;
 
 #endif

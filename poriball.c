@@ -21,8 +21,8 @@ int main() {
   srand(rtime());
   GameData game;
   init_video(&game);
-  game.colfg = SDL_MapRGB(game.screen->format, 0x80, 0x80, 0x80);
-  game.colbg = SDL_MapRGB(game.screen->format, 0xd0, 0xd0, 0xd0);
+  game.colfg = (SDL_Color){0x80, 0x80, 0x80};
+  game.colbg = (SDL_Color){0xd0, 0xd0, 0xd0};
   game.porimg = IMG_Load(PORIMG); /* 200x100px, with the point 100,90 being the base point */
 
   World world;

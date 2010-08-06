@@ -2,6 +2,11 @@
 #include "gametypes.h"
 
 
+static Uint32 map_color(SDL_PixelFormat *fmt, SDL_Color *c) {
+  Uint32 color = SDL_MapRGB(fmt, c->r, c->g, c->b );
+  return color;
+}
+
 /* returns time since init, in seconds */
 float rtime() {
   return (float)SDL_GetTicks() / 1000;
@@ -41,7 +46,7 @@ SDLKey key_prompt(char subject[], char object[]) {
 void draw_ball(GameData *game, Ball *b) {
   int sq = b->r * 1.8;
   SDL_Rect rect = { b->pos.x - b->r, SCREEN_HEIGHT - (b->pos.y + b->r), sq, sq };
-  SDL_FillRect( game->screen, &rect, game->colfg );
+  SDL_FillRect( game->screen, &rect, map_color(game->screen->format, &game->colfg) );
 }
 
 void draw_player(GameData *game, Player *p, SDL_Surface *img) {
@@ -50,7 +55,7 @@ void draw_player(GameData *game, Player *p, SDL_Surface *img) {
 }
 
 void draw_world(World *world, GameData *game) {
-  SDL_FillRect(game->screen, NULL, game->colbg);
+  SDL_FillRect( game->screen, NULL, map_color(game->screen->format, &game->colbg) );
   Player *p;
   for( p = &world->players[0]; p < &world->players[world->pnum]; p++ )
     draw_player(game, p, game->porimg);
