@@ -96,10 +96,11 @@ Wall make_wall(Pt pos, float theta) {
 void players_key_prompt(World *w) {
   int i;
   Player *p;
-  char name[16];		/* how do normal people do this? */
+  int len = 16;
   for( i=0;i < w->pnum;i++ ) {
     p = &w->players[i];
-    sprintf(name,"player %i",i);
+    char name[len];
+    snprintf(name,len,"player %i",i);
     p->keyl = key_prompt(name, "LEFT");
     p->keyr = key_prompt(name, "RIGHT");
     p->keyj = key_prompt(name, "JUMP");
