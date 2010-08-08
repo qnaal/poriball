@@ -1,12 +1,24 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
+#include <SDL_gfxPrimitives.h>
 #include "gametypes.h"
 
 
-static Uint32 map_color(SDL_PixelFormat *fmt, SDL_Color *c) {
+/* screen-dependent pixel value */
+static Uint32 map_color_pixel(SDL_PixelFormat *fmt, SDL_Color *c) {
   Uint32 color = SDL_MapRGB(fmt, c->r, c->g, c->b );
   return color;
 }
+/* 0xRRGGBBAA */
+static Uint32 map_color_gfx(SDL_Color *c) {
+  return ((Uint32) c->r << 24) | ((Uint32) c->g << 16) | ((Uint32) c->b << 8) | ((Uint32) 255);
+}
+
+/* returns the projected pixel location of pt */
+static Pt project_scr(Pt pt) {
+  return (Pt){pt.x, SCREEN_HEIGHT - pt.y};
+}
+
 
 /* returns time since init, in seconds */
 float rtime() {
@@ -49,7 +61,7 @@ static char msg[128];
 SDLKey key_prompt(GameData *game, char subject[], char object[]) {
   sprintf(msg, "%s press %s", subject, object);
 
-  SDL_FillRect( game->screen, NULL, map_color(game->screen->format, &game->colbg) );
+  SDL_FillRect( game->screen, NULL, map_color_pixel(game->screen->format, &game->colbg) );
   SDL_Surface *msg_surface = TTF_RenderText_Solid( game->font, msg, game->colfg );
   SDL_BlitSurface( msg_surface, NULL, game->screen, NULL );
   SDL_Flip(game->screen);
@@ -61,22 +73,32 @@ SDLKey key_prompt(GameData *game, char subject[], char object[]) {
 }
 
 static void draw_ball(GameData *game, Ball *b) {
-  int sq = b->r * 1.8;
-  SDL_Rect rect = { b->pos.x - b->r, SCREEN_HEIGHT - (b->pos.y + b->r), sq, sq };
-  SDL_FillRect( game->screen, &rect, map_color(game->screen->format, &game->colfg) );
+  Pt scrpos = project_scr(b->pos);
+  filledCircleColor( game->screen, scrpos.x, scrpos.y, b->r, map_color_gfx(&game->colfg) );
 }
 
 static void draw_player(GameData *game, Player *p, SDL_Surface *img) {
-  SDL_Rect dest = { p->pos.x - 100, SCREEN_HEIGHT - (p->pos.y + 90), 0, 0 };
+  Pt imgcorner = {-100,90};
+  Pt destpt = project_scr( vsum(p->pos,imgcorner) );
+  SDL_Rect dest = { destpt.x,destpt.y, 0,0 };
   SDL_BlitSurface( img, NULL, game->screen, &dest );
 }
 
-void draw_world(World *world, GameData *game) {
-  SDL_FillRect( game->screen, NULL, map_color(game->screen->format, &game->colbg) );
+static void draw_wall(GameData *game, Wall *w) {
+  if( w->type == seg ) {
+    Pt pt1 = project_scr( w->pos);
+    Pt pt2 = project_scr( vsum(w->pt2,w->pos) );
+    aalineColor( game->screen, pt1.x, pt1.y, pt2.x, pt2.y, map_color_gfx(&game->colfg) );
+  }
+  /* FIXME: should draw lines too */
+}
 
-  /* FIXME: quick and dirty draw net */
-  SDL_Rect net = { SCREEN_WIDTH/2 - 2, SCREEN_HEIGHT - NET_HEIGHT - 2, 4, 4 };
-  SDL_FillRect( game->screen, &net, map_color(game->screen->format, &game->colfg) );
+void draw_world(World *world, GameData *game) {
+  SDL_FillRect( game->screen, NULL, map_color_pixel(game->screen->format, &game->colbg) );
+
+  Wall *w;
+  for( w = &world->walls[0]; w < &world->walls[world->wnum]; w++ )
+    draw_wall(game, w);
 
   Player *p;
   for( p = &world->players[0]; p < &world->players[world->pnum]; p++ )
