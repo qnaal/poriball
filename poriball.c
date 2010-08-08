@@ -9,7 +9,7 @@
 #include "macroconfig.h"
 #include "physics.h"
 
-/* prototypes */
+
 Ball make_ball(float x, float y);
 Player make_player(float x, float y);
 Wall make_wall_long(Pt pos, float theta);
@@ -17,7 +17,7 @@ Wall make_wall(Pt pos, Pt pt2);
 void players_key_prompt(GameData *game, World *w);
 float clamp(float x, float min, float max);
 
-/* functions */
+
 int main() {
   srand(rtime());
   GameData game;
@@ -34,7 +34,6 @@ int main() {
   for( p = &world.players[0]; p < &world.players[world.pnum]; p++ ) {
     float placement = PLAYER_RADIUS + ( (float)rand() * (SCREEN_WIDTH - 2 * PLAYER_RADIUS) ) / RAND_MAX;
     *p = make_player(placement,0);
-    p->skywalk = SKYWALK;
   }
   players_key_prompt(&game, &world);
 
@@ -87,6 +86,8 @@ Player make_player(float x, float y) {
   p.vel = (Pt){0,0};
   p.pressl = false;
   p.pressr = false;
+  p.pressj = false;
+  p.skywalk = SKYWALK;
 
   return p;
 }
