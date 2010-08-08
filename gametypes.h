@@ -25,7 +25,7 @@ typedef struct {
 } Player;
 
 typedef struct {
- /* pos/size */
+  /* pos/size */
   Pt pos;			/* px */
   int r;
   /* vel */
@@ -34,7 +34,12 @@ typedef struct {
 
 typedef struct {
   Pt pos;
-  float theta;			/* Angle of wall; 0 < theta < PI */
+  enum {
+    seg,
+    line
+  } type;
+  float theta;		 /* Angle of linewall; 0 < theta < PI */
+  Pt pt2;		 /* pos of second pt of the seg, rel to pos */
 } Wall;
 
 typedef struct {

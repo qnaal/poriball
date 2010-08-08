@@ -12,7 +12,8 @@
 /* prototypes */
 Ball make_ball(float x, float y);
 Player make_player(float x, float y);
-Wall make_wall(Pt pos, float theta);
+Wall make_wall_long(Pt pos, float theta);
+Wall make_wall(Pt pos, Pt pt2);
 void players_key_prompt(GameData *game, World *w);
 float clamp(float x, float min, float max);
 
@@ -37,10 +38,11 @@ int main() {
   }
   players_key_prompt(&game, &world);
 
-  world.wnum = 3;
-  world.walls[0] = make_wall( (Pt){0,0}, M_PI/2 );
-  world.walls[1] = make_wall( (Pt){SCREEN_WIDTH,0}, M_PI/2 );
-  world.walls[2] = make_wall( (Pt){0,SCREEN_HEIGHT}, 0 ); /* RACQUETBALL */
+  world.wnum = 4;
+  world.walls[0] = make_wall_long( (Pt){0,0}, M_PI/2 );
+  world.walls[1] = make_wall_long( (Pt){SCREEN_WIDTH,0}, M_PI/2 );
+  world.walls[2] = make_wall_long( (Pt){0,SCREEN_HEIGHT}, 0 ); /* RACQUETBALL */
+  world.walls[3] = make_wall( (Pt){SCREEN_WIDTH/2, 0}, (Pt){0, NET_HEIGHT} );
 
   world.b = make_ball(world.players[0].pos.x, 200);
 
@@ -89,8 +91,16 @@ Player make_player(float x, float y) {
   return p;
 }
 
-Wall make_wall(Pt pos, float theta) {
-  return (Wall){pos, theta};
+Wall make_wall_long(Pt pos, float theta) {
+  return (Wall){pos, line, theta};
+}
+
+Wall make_wall(Pt pt1, Pt pt2) {
+  Wall w;
+  w.pos = pt1;
+  w.type = seg;
+  w.pt2 = pt2;
+  return w;
 }
 
 void players_key_prompt(GameData *game, World *w) {
@@ -105,12 +115,4 @@ void players_key_prompt(GameData *game, World *w) {
     p->keyr = key_prompt(game, name, "RIGHT");
     p->keyj = key_prompt(game, name, "JUMP");
   }
-}
-
-float clamp(float x, float min, float max) {
-  if( x < min )
-    x = min;
-  else if( x > max )
-    x = max;
-  return x;
 }

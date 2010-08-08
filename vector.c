@@ -1,6 +1,14 @@
 #include <math.h>
 #include "vector.h"
 
+float clamp(float x, float min, float max) {
+  if( x < min )
+    x = min;
+  else if( x > max )
+    x = max;
+  return x;
+}
+
 Pt vsum(Pt pt1, Pt pt2) {
   Pt sum = { pt1.x + pt2.x, pt1.y + pt2.y };
   return sum;

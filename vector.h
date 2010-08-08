@@ -13,6 +13,7 @@ typedef struct {
 
 #endif
 
+float clamp(float x, float min, float max);
 Pt vsum(Pt pt1, Pt pt2);
 Pt vdif(Pt pt1, Pt pt2);
 Pt vmlt(float s, Pt pt);

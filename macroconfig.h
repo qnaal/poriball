@@ -1,6 +1,7 @@
 #define GAME_SPEED 200.0	/* updates/s */
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
+#define NET_HEIGHT 150
 
 #define MSG_FONT "crap/ter-132b.pcf.gz"
 #define MSG_SIZE 32

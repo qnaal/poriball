@@ -78,13 +78,22 @@ static Contact collision_player(Ball *b, Player *p) {
 }
 
 static Contact collision_wall(Ball *b, Wall *w) {
-  Pt bpos = vdif( b->pos, w->pos ); /* relative position */
-  /* close_r: distance along w from w.pos to the closest pt to b.pos */
-  float close_r = cos(w->theta - azimuth(bpos)) * pythag(bpos);
-  /* I LOVE BOTH OF THESE SO MUCH I CAN'T PICK JUST ONE */
-  /* float close_r = vdot( carterize((PtPol){1,w->theta}), bpos ); */
-  Pt close = carterize( (PtPol){close_r,w->theta} );
-  Pt diff = vdif( close, bpos );
+  Pt diff;
+  if( w->type == line ) {
+    Pt bpos = vdif( b->pos, w->pos ); /* relative position */
+    /* close_r: distance along w from w.pos to the closest pt to b.pos */
+    float close_r = cos(w->theta - azimuth(bpos)) * pythag(bpos);
+    /* I LOVE BOTH OF THESE SO MUCH I CAN'T PICK JUST ONE */
+    /* float close_r = vdot( carterize((PtPol){1,w->theta}), bpos ); */
+    Pt close = carterize( (PtPol){close_r,w->theta} );
+    diff = vdif( close, bpos );
+  } else {			/* w must be a segment... */
+    Pt bpos = vdif( b->pos, w->pos );
+    Pt spos = w->pt2;
+    Pt close = vmlt( clamp( vdot(bpos,spos) / vdot(spos,spos), 0, 1 ),
+		     spos );
+    diff = vdif( close, bpos );
+  }
   float diff_r = pythag(diff);
   Contact contact = zero_contact();
   contact.depth = b->r - diff_r;
@@ -134,11 +143,6 @@ static void handle_collisions(World *w) {
 	}
       }
       if( big->depth != 0 ) {
-	/*
-	 * FIXME: in the case that Ball is going in dir X at speed S,
-	 * and Dude collides from behind, going in dir X at speed S+n,
-	 * this logic fails. ...I think...
-	 */
 	float dvelr = -(1 + ELASTICITY) * abs( vdot( vdif( big->bvel, big->ovel ),
 						     carterize( (PtPol){1, big->normal} )
 						     )

@@ -73,9 +73,15 @@ static void draw_player(GameData *game, Player *p, SDL_Surface *img) {
 
 void draw_world(World *world, GameData *game) {
   SDL_FillRect( game->screen, NULL, map_color(game->screen->format, &game->colbg) );
+
+  /* FIXME: quick and dirty draw net */
+  SDL_Rect net = { SCREEN_WIDTH/2 - 2, SCREEN_HEIGHT - NET_HEIGHT - 2, 4, 4 };
+  SDL_FillRect( game->screen, &net, map_color(game->screen->format, &game->colfg) );
+
   Player *p;
   for( p = &world->players[0]; p < &world->players[world->pnum]; p++ )
     draw_player(game, p, game->porimg);
+
   draw_ball(game, &world->b);
   SDL_Surface *msg_surface = TTF_RenderText_Blended( game->font, msg, game->colfg );
   SDL_BlitSurface( msg_surface, NULL, game->screen, NULL );
