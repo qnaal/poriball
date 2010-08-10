@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdbool.h>
 #include "vector.h"
 
 float clamp(float x, float min, float max) {
@@ -7,6 +8,19 @@ float clamp(float x, float min, float max) {
   else if( x > max )
     x = max;
   return x;
+}
+
+/* retroactive, destructive clamp */
+bool clampr(float *x, float min, float max) {
+  bool ret = false;
+  if( *x < min ) {
+    *x = min;
+    ret = true;
+  } else if( *x > max ) {
+    *x = max;
+    ret = true;
+  }
+  return ret;
 }
 
 Pt vsum(Pt pt1, Pt pt2) {

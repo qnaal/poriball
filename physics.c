@@ -60,6 +60,9 @@ static void move_player(Player *p, float dt) {
     p->vel = vsum( p->vel, vmlt(dt, (Pt){0,-ADTG}) );
   }
   p->pos = vsum( p->pos, vmlt(dt, p->vel) );
+  if( clampr(&p->pos.x, p->reign->l + p->r, p->reign->r - p->r) ) {
+      p->vel.x = 0;
+    }
 }
 
 static Contact collision_player(Ball *b, Player *p) {

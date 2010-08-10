@@ -1,5 +1,6 @@
 #ifndef vector_h
 #define vector_h
+#include <stdbool.h>
 
 typedef struct {
   float x;
@@ -14,6 +15,7 @@ typedef struct {
 #endif
 
 float clamp(float x, float min, float max);
+bool clampr(float *x, float min, float max);
 Pt vsum(Pt pt1, Pt pt2);
 Pt vdif(Pt pt1, Pt pt2);
 Pt vmlt(float s, Pt pt);

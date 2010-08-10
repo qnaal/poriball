@@ -8,10 +8,16 @@
 #include "vector.h"
 
 typedef struct {
+  float l;
+  float r;
+} Territory;
+
+typedef struct {
   /* pos/size */
   Pt pos;			 /* px */
-  int r;
+  float r;
   Pt vel;			 /* px/s */
+  Territory *reign;
   /* keys pressed */
   bool pressl;
   bool pressr;
@@ -27,7 +33,7 @@ typedef struct {
 typedef struct {
   /* pos/size */
   Pt pos;			/* px */
-  int r;
+  float r;
   /* vel */
   Pt vel;			/* px/s */
 } Ball;
@@ -49,6 +55,8 @@ typedef struct {
   unsigned wnum;
   Wall walls[5];
   Ball b;
+  unsigned tnum;
+  Territory terras[2];
 } World;
 
 typedef struct {
