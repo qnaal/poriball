@@ -57,6 +57,8 @@ typedef struct {
   Ball b;
   unsigned tnum;
   Territory terras[2];
+  float t0;
+  float t1;
 } World;
 
 typedef struct {

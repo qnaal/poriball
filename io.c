@@ -72,6 +72,19 @@ SDLKey key_prompt(GameData *game, char subject[], char object[]) {
   return key;
 }
 
+static void fps_counter(char *fps, int t0, int t1) {
+  static int lastcheck = 0;
+  static int fps_accum = 0;
+  if( floor(t1) > lastcheck ) {
+    lastcheck = floor(t1);
+    float dt = t1 - t0;
+    if( dt > 0 )
+      sprintf( fps, "%i fps", fps_accum );
+    fps_accum = 0;
+  } else
+    fps_accum++;
+}
+
 static void draw_ball(GameData *game, Ball *b) {
   Pt scrpos = project_scr(b->pos);
   filledCircleColor( game->screen, scrpos.x, scrpos.y, b->r, map_color_gfx(&game->colfg) );
@@ -105,7 +118,10 @@ void draw_world(World *world, GameData *game) {
     draw_player(game, p, game->porimg);
 
   draw_ball(game, &world->b);
-  SDL_Surface *msg_surface = TTF_RenderText_Blended( game->font, msg, game->colfg );
+
+  fps_counter(msg, world->t0, world->t1);
+
+  SDL_Surface *msg_surface = TTF_RenderText_Solid( game->font, msg, game->colfg );
   SDL_BlitSurface( msg_surface, NULL, game->screen, NULL );
   SDL_Flip(game->screen);
 }

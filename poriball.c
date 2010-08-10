@@ -50,15 +50,14 @@ int main() {
   players_key_prompt(&game, &world);
 
   float phys_dt = 1/GAME_SPEED;
-  float t0;
-  float t1 = rtime();
+  world.t1 = rtime();
   float phys_accum = 0;
 
   while( world.running ) {
 
-    t0 = t1;
-    t1 = rtime();
-    phys_accum += t1 - t0;
+    world.t0 = world.t1;
+    world.t1 = rtime();
+    phys_accum += world.t1 - world.t0;
 
     while( phys_accum >= phys_dt ) {
       handle_events(&world);
