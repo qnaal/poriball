@@ -4,6 +4,56 @@
 #include "gametypes.h"
 
 
+/*
+ * Event Handling
+ */
+
+typedef void (*EvH)(World*, SDL_Event*);
+
+static EvH keymap[SDLK_LAST];
+
+void evh_quit(World *world, SDL_Event *event) {
+  world->running = false;
+}
+void evh_player(World *world, SDL_Event *event) {
+  bool keydown;
+  if( event->type == SDL_KEYDOWN )
+    keydown = true;
+  else keydown = false;
+  Player *p;
+  for( p = &world->players[0]; p < &world->players[world->pnum]; p++ ) {
+    if( event->key.keysym.sym == p->keyl ) {
+      p->pressl = keydown;
+    }
+    if( event->key.keysym.sym == p->keyr ) {
+      p->pressr = keydown;
+    }
+    if( event->key.keysym.sym == p->keyj ) {
+      p->pressj = keydown;
+    }
+  }
+}
+
+void handle_events(World *world) {
+  SDL_Event event;
+  EvH handler = 0;
+  while( SDL_PollEvent(&event) ) {
+    switch( event.type ) {
+    case SDL_KEYDOWN:
+    case SDL_KEYUP:
+      handler = keymap[event.key.keysym.sym];
+      break;
+    }
+    if( handler )
+      handler(world, &event);
+  }
+}
+
+
+/*
+ * The Other SDL Stuff
+ */
+
 /* screen-dependent pixel value */
 static Uint32 map_color_pixel(SDL_PixelFormat *fmt, SDL_Color *c) {
   Uint32 color = SDL_MapRGB(fmt, c->r, c->g, c->b );
@@ -46,6 +96,8 @@ bool init_video(GameData *game) {
     fprintf(stderr, "Unable to initialize video mode: %s\n", SDL_GetError());
     return false;
   }
+
+  keymap[KEY_QUIT] = evh_quit;
   return true;
 }
 
@@ -67,9 +119,14 @@ SDLKey key_prompt(GameData *game, char subject[], char object[]) {
   SDL_Flip(game->screen);
   msg[0] = '\0';
 
-  SDLKey key = wait_for_key();
-  printf("%s %s is %s\n", subject, object, SDL_GetKeyName(key));
-  return key;
+  while( true ) {
+    SDLKey key = wait_for_key();
+    if( keymap[key] == NULL ) {
+      keymap[key] = &evh_player;
+      printf("%s %s is %s\n", subject, object, SDL_GetKeyName(key));
+      return key;
+    } else puts("Key already assigned");
+  }
 }
 
 static void fps_counter(char *fps, int t0, int t1) {
@@ -124,51 +181,4 @@ void draw_world(World *world, GameData *game) {
   SDL_Surface *msg_surface = TTF_RenderText_Solid( game->font, msg, game->colfg );
   SDL_BlitSurface( msg_surface, NULL, game->screen, NULL );
   SDL_Flip(game->screen);
-}
-
-void handle_events(World *world) {
-  SDL_Event event;
-  Player *p;
-  bool done = false;
-  while( SDL_PollEvent(&event) ) {
-    switch(event.type) {
-    case SDL_KEYDOWN:
-      for( p = &world->players[0]; p < &world->players[world->pnum]; p++ ) {
-	if( event.key.keysym.sym == p->keyl ) {
-	  p->pressl = true;
-	  done = true;
-	} else if( event.key.keysym.sym == p->keyr ) {
-	  p->pressr = true;
-	  done = true;
-	} else if( event.key.keysym.sym == p->keyj ) {
-	  p->pressj = true;
-	  done = true;
-	}
-      }
-      if( !done ) {
-	if( event.key.keysym.sym == KEY_QUIT ) {
-	  world->running = false;
-	} else
-	  printf("%s\n", SDL_GetKeyName(event.key.keysym.sym));
-      }
-      break;
-    case SDL_KEYUP:
-      for( p = &world->players[0]; p < &world->players[world->pnum]; p++ ) {
-	if( event.key.keysym.sym == p->keyl ) {
-	  p->pressl = false;
-	  done = true;
-	} else if( event.key.keysym.sym == p->keyr ) {
-	  p->pressr = false;
-	  done = true;
-	} else if( event.key.keysym.sym == p->keyj ) {
-	  p->pressj = false;
-	  done = true;
-	}
-      }
-      break;
-    case SDL_QUIT:
-      world->running = false;
-      break;
-    }
-  }
 }
