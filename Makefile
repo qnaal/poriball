@@ -8,4 +8,8 @@ LIBS = -lSDL -lSDL_image -lSDL_ttf -lSDL_gfx
 all: poriball
 
 poriball:
-	@${CC} ${CFLAGS} ${SRC} ${LIBS}
+	@${CC} ${CFLAGS} ${SRC} ${LIBS} -o $@
+
+clean:
+	@echo "cleaning..."
+	rm -f poriball
