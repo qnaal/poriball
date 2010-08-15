@@ -117,7 +117,7 @@ static void handle_collisions(World *w) {
 
   /* Player contacts */
   Player *p;
-  for( p = &w->players[0]; p < &w->players[w->pnum]; p++ ) {
+  for( p = w->players; p < &w->players[w->pnum]; p++ ) {
     contacts[cntnum] = collision_player(b, p);
     if( contacts[cntnum].depth != 0 )
       cntnum++;
@@ -125,7 +125,7 @@ static void handle_collisions(World *w) {
 
   /* Wall contacts */
   Wall *wall;
-  for( wall = &w->walls[0]; wall < &w->walls[w->wnum]; wall++ ) {
+  for( wall = w->walls; wall < &w->walls[w->wnum]; wall++ ) {
     contacts[cntnum] = collision_wall(b, wall);
     if( contacts[cntnum].depth != 0 ) {
       cntnum++;
@@ -139,7 +139,7 @@ static void handle_collisions(World *w) {
       Contact *c;
       Contact *big;
       float big_size = 0;
-      for( c = &contacts[0]; c < &contacts[cntnum]; c++ ) {
+      for( c = contacts; c < &contacts[cntnum]; c++ ) {
 	if( c->depth > big_size ) {
 	  big = c;
 	  big_size = c->depth;

@@ -42,8 +42,8 @@ int main() {
 
   world.pnum = MAX_DUDES;
   Player *p;
-  for( p = &world.players[0]; p < &world.players[world.pnum]; p++ ) {
-    Territory *reign = &world.terras[(p - &world.players[0]) % world.tnum];
+  for( p = world.players; p < &world.players[world.pnum]; p++ ) {
+    Territory *reign = &world.terras[(p - world.players) % world.tnum];
     *p = make_player(reign);
   }
   world.b = make_ball(world.players[0].pos.x, 200);

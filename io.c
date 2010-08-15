@@ -21,7 +21,7 @@ void evh_player(World *world, SDL_Event *event) {
     keydown = true;
   else keydown = false;
   Player *p;
-  for( p = &world->players[0]; p < &world->players[world->pnum]; p++ ) {
+  for( p = world->players; p < &world->players[world->pnum]; p++ ) {
     if( event->key.keysym.sym == p->keyl ) {
       p->pressl = keydown;
     }
@@ -167,11 +167,11 @@ void draw_world(World *world, GameData *game) {
   SDL_FillRect( game->screen, NULL, map_color_pixel(game->screen->format, &game->colbg) );
 
   Wall *w;
-  for( w = &world->walls[0]; w < &world->walls[world->wnum]; w++ )
+  for( w = world->walls; w < &world->walls[world->wnum]; w++ )
     draw_wall(game, w);
 
   Player *p;
-  for( p = &world->players[0]; p < &world->players[world->pnum]; p++ )
+  for( p = world->players; p < &world->players[world->pnum]; p++ )
     draw_player(game, p, game->porimg);
 
   draw_ball(game, &world->b);
