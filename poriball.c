@@ -20,6 +20,7 @@ float clamp(float x, float min, float max);
 
 
 int main() {
+  puts("gotime");
   srand(rtime());
   GameData game;
   init_video(&game);
