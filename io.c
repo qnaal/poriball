@@ -12,10 +12,10 @@ typedef void (*EvH)(World*, SDL_Event*);
 
 static EvH keymap[SDLK_LAST];
 
-void evh_quit(World *world, SDL_Event *event) {
+static void evh_quit(World *world, SDL_Event *event) {
   world->running = false;
 }
-void evh_player(World *world, SDL_Event *event) {
+static void evh_player(World *world, SDL_Event *event) {
   bool keydown;
   if( event->type == SDL_KEYDOWN )
     keydown = true;
@@ -42,6 +42,9 @@ void handle_events(World *world) {
     case SDL_KEYDOWN:
     case SDL_KEYUP:
       handler = keymap[event.key.keysym.sym];
+      break;
+    case SDL_QUIT:
+      handler = &evh_quit;
       break;
     }
     if( handler )
@@ -97,7 +100,7 @@ bool init_video(GameData *game) {
     return false;
   }
 
-  keymap[KEY_QUIT] = evh_quit;
+  keymap[KEY_QUIT] = &evh_quit;
   return true;
 }
 
