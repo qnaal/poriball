@@ -1,8 +1,9 @@
 #include <math.h>
 #include "gametypes.h"
-#include "macroconfig.h"
 #include "physics.h"
 #include "vector.h"
+
+#define MAX_CONTACTS 32
 
 
 typedef struct {
@@ -26,6 +27,10 @@ static void move_ball(Ball *b, float physdt);
 static void move_player(Player *p, float physdt);
 static void handle_collisions(World *w);
 
+static float adtg;
+void turn_on_gravity(float g) {
+  adtg = g;
+}
 
 void physics(World *world, float dt) {
   int i;
@@ -39,7 +44,7 @@ void physics(World *world, float dt) {
 
 static void move_ball(Ball *b, float dt) {
   b->pos = vsum( b->pos, vmlt(dt, b->vel) );
-  b->vel = vsum( b->vel, vmlt(dt, (Pt){0,-ADTG}) );
+  b->vel = vsum( b->vel, vmlt(dt, (Pt){0,-adtg}) );
 }
 
 static void move_player(Player *p, float dt) {
@@ -51,13 +56,13 @@ static void move_player(Player *p, float dt) {
     int dir= 0;
     if( p->pressr ) dir++;
     if( p->pressl ) dir--;
-    p->vel.x = dir * PLAYER_SPEED;
+    p->vel.x = dir * p->speed;
   }
   if( p->pos.y == 0 ) {
     if( p->pressj )
-      p->vel.y = JUMP_VEL;
+      p->vel.y = p->jumpvel;
   } else {
-    p->vel = vsum( p->vel, vmlt(dt, (Pt){0,-ADTG}) );
+    p->vel = vsum( p->vel, vmlt(dt, (Pt){0,-adtg}) );
   }
   p->pos = vsum( p->pos, vmlt(dt, p->vel) );
   if( clampr(&p->pos.x, p->reign->l + p->r, p->reign->r - p->r) ) {
@@ -146,7 +151,7 @@ static void handle_collisions(World *w) {
 	}
       }
       if( big->depth != 0 ) {
-	float dvelr = -(1 + ELASTICITY) * abs( vdot( vdif( big->bvel, big->ovel ),
+	float dvelr = -(1 + w->elasticity) * abs( vdot( vdif( big->bvel, big->ovel ),
 						     carterize( (PtPol){1, big->normal} )
 						     )
 					       );

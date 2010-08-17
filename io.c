@@ -57,6 +57,9 @@ void handle_events(World *world) {
  * The Other SDL Stuff
  */
 
+static int screenheight;
+
+
 /* screen-dependent pixel value */
 static Uint32 map_color_pixel(SDL_PixelFormat *fmt, SDL_Color *c) {
   Uint32 color = SDL_MapRGB(fmt, c->r, c->g, c->b );
@@ -69,7 +72,7 @@ static Uint32 map_color_gfx(SDL_Color *c) {
 
 /* returns the projected pixel location of pt */
 static Pt project_scr(Pt pt) {
-  return (Pt){pt.x, SCREEN_HEIGHT - pt.y};
+  return (Pt){pt.x, screenheight - pt.y};
 }
 
 
@@ -90,17 +93,19 @@ bool init_video(GameData *game) {
     fprintf(stderr, "Unable to initialize SDL_ttf: %s\n", SDL_GetError());
     return false;
   }
-  if( (game->font = TTF_OpenFont(MSG_FONT,MSG_SIZE)) == NULL ) {
-    fprintf(stderr, "Unable to load font: %s\n", MSG_FONT);
+  if( (game->font = TTF_OpenFont(game->fontpath,game->fontsize)) == NULL ) {
+    fprintf(stderr, "Unable to load font: %s\n", game->fontpath);
   }
 
-  game->screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 0, SDL_ANYFORMAT);
+  game->screen = SDL_SetVideoMode(game->world->width, game->world->height, 0, SDL_ANYFORMAT);
   if( game->screen == NULL ) {
     fprintf(stderr, "Unable to initialize video mode: %s\n", SDL_GetError());
     return false;
   }
 
-  keymap[KEY_QUIT] = &evh_quit;
+  screenheight = game->world->height;
+  keymap[game->quitkey] = &evh_quit;
+
   return true;
 }
 
@@ -111,7 +116,7 @@ static SDLKey wait_for_key() {
   return event.key.keysym.sym;
 }
 
-static char msg[128];
+static char msg[STR_SHORT];
 
 SDLKey key_prompt(GameData *game, char subject[], char object[]) {
   sprintf(msg, "%s press %s", subject, object);
@@ -126,7 +131,7 @@ SDLKey key_prompt(GameData *game, char subject[], char object[]) {
     SDLKey key = wait_for_key();
     if( keymap[key] == NULL ) {
       keymap[key] = &evh_player;
-      printf("%s %s is %s\n", subject, object, SDL_GetKeyName(key));
+      printf("%s %s is %s\t(%i)\n", subject, object, SDL_GetKeyName(key), key);
       return key;
     } else puts("Key already assigned");
   }
