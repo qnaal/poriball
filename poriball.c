@@ -101,6 +101,7 @@ int main() {
     }
 
   };
+  puts("Whyyyyyyyy...");
   return 0;
 }
 
