@@ -74,7 +74,7 @@ static void parse_config_line(ConfigMatch *matches, char *line, bool verbose) {
 
     if( strcmp(m->key, key) == 0 ) {
       switch( m->type ) {
-      case in: {
+      case INT: {
 	int value;
 	sscanf(svalue, "%i", &value);
 	*(int*)m->val = value;
@@ -82,7 +82,7 @@ static void parse_config_line(ConfigMatch *matches, char *line, bool verbose) {
 	  printf("%s = %i\n", m->key, value);
 	break;
       }
-      case fl: {
+      case FLOAT: {
 	float value;
 	sscanf(svalue, "%f", &value);
 	*(float*)m->val = value;
@@ -90,7 +90,7 @@ static void parse_config_line(ConfigMatch *matches, char *line, bool verbose) {
 	  printf("%s = %f\n", m->key, value);
 	break;
       }
-      case co: {
+      case COLOR: {
 	int r,g,b;
 	sscanf(svalue, "%i %i %i", &r,&g,&b);
 	*(SDL_Color*)m->val = (SDL_Color){r,g,b};
@@ -98,7 +98,7 @@ static void parse_config_line(ConfigMatch *matches, char *line, bool verbose) {
 	  printf("%s = %i,%i,%i\n", m->key, r,g,b);
 	break;
       }
-      case bo: {
+      case BOOL: {
 	bool value = true;
 	if( strcmp(svalue,"false") == 0 || strcmp(svalue,"0") == 0 )
 	  value = false;
@@ -111,7 +111,7 @@ static void parse_config_line(ConfigMatch *matches, char *line, bool verbose) {
 	}
 	break;
       }
-      case st:
+      case STRING:
 	strncpy((char*)m->val, svalue, STR_SHORT);
 	if( verbose )
 	  printf("%s = %s\n", m->key, (char*)m->val);

@@ -87,7 +87,7 @@ static Contact collision_player(Ball *b, Player *p) {
 
 static Contact collision_wall(Ball *b, Wall *w) {
   Pt diff;
-  if( w->type == line ) {
+  if( w->type == LINE ) {
     Pt bpos = vdif( b->pos, w->pos ); /* relative position */
     /* close_r: distance along w from w.pos to the closest pt to b.pos */
     float close_r = cos(w->theta - azimuth(bpos)) * pythag(bpos);

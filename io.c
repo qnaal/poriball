@@ -163,7 +163,7 @@ static void draw_player(GameData *game, Player *p, SDL_Surface *img) {
 }
 
 static void draw_wall(GameData *game, Wall *w) {
-  if( w->type == seg ) {
+  if( w->type == SEG ) {
     Pt pt1 = project_scr( w->pos);
     Pt pt2 = project_scr( vsum(w->pt2,w->pos) );
     aalineColor( game->screen, pt1.x, pt1.y, pt2.x, pt2.y, map_color_gfx(&game->colfg) );

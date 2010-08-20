@@ -45,8 +45,8 @@ typedef struct {
 typedef struct {
   Pt pos;
   enum {
-    seg,
-    line
+    SEG,
+    LINE,
   } type;
   float theta;		 /* Angle of linewall; 0 < theta < PI */
   Pt pt2;		 /* pos of second pt of the seg, rel to pos */

@@ -4,11 +4,11 @@ typedef struct {
   char key[STR_SHORT];
   void *val;
   enum {
-    fl,				/* float */
-    in,				/* int */
-    co,				/* color */
-    bo,				/* bool */
-    st,				/* string */
+    FLOAT,
+    INT,
+    COLOR,
+    BOOL,
+    STRING,
   } type;
 } ConfigMatch;
 

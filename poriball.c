@@ -30,24 +30,24 @@ int main() {
     float adtg;
     char porimgpath[STR_SHORT];
     ConfigMatch matches[] = {
-      {"screenwidth", &world.width, in},
-      {"screenheight", &world.height, in},
-      {"netheight", &world.netheight, fl},
-      {"adtg", &adtg, fl},
-      {"playerradius", &world.pdefs.radius, fl},
-      {"playerspeed", &world.pdefs.speed, fl},
-      {"jumpvel", &world.pdefs.jumpvel, fl},
-      {"skywalk", &world.pdefs.skywalk, bo},
-      {"ballradius", &world.ballradius, fl},
-      {"elasticity", &world.elasticity, fl},
-      {"font", &game.fontpath, st},
-      {"fontsize", &game.fontsize, in},
-      {"colorfg", &game.colfg, co},
-      {"colorbg", &game.colbg, co},
-      {"physhz", &world.physhz, fl},
-      {"quitkey", &game.quitkey, in},
-      {"dudes", &world.pnum, in},
-      {"porimg", &porimgpath, st},
+      {"screenwidth", &world.width, INT},
+      {"screenheight", &world.height, INT},
+      {"netheight", &world.netheight, FLOAT},
+      {"adtg", &adtg, FLOAT},
+      {"playerradius", &world.pdefs.radius, FLOAT},
+      {"playerspeed", &world.pdefs.speed, FLOAT},
+      {"jumpvel", &world.pdefs.jumpvel, FLOAT},
+      {"skywalk", &world.pdefs.skywalk, BOOL},
+      {"ballradius", &world.ballradius, FLOAT},
+      {"elasticity", &world.elasticity, FLOAT},
+      {"font", &game.fontpath, STRING},
+      {"fontsize", &game.fontsize, INT},
+      {"colorfg", &game.colfg, COLOR},
+      {"colorbg", &game.colbg, COLOR},
+      {"physhz", &world.physhz, FLOAT},
+      {"quitkey", &game.quitkey, INT},
+      {"dudes", &world.pnum, INT},
+      {"porimg", &porimgpath, STRING},
       {""}
     };
     read_config(matches);
@@ -133,13 +133,13 @@ Player make_player(Territory *reign, PDefs *pdefs) {
 }
 
 Wall make_wall_long(Pt pos, float theta) {
-  return (Wall){pos, line, theta};
+  return (Wall){pos, LINE, theta};
 }
 
 Wall make_wall(Pt pt1, Pt pt2) {
   Wall w;
   w.pos = pt1;
-  w.type = seg;
+  w.type = SEG;
   w.pt2 = pt2;
   return w;
 }
